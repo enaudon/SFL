@@ -1,0 +1,13 @@
+#
+# .gitignore
+#
+
+# Build files
+/_build
+*.byte
+*.native
+
+# Editor files
+*.sw?
+*~
+
