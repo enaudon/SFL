@@ -74,7 +74,11 @@ let constrain (e : Unify.term AST.t) : (Unify.term * Unify.term) list =
   let e0 = [e] in
   fn c0 e0
 
-let rec annotate_literal env (l : PT.literal) : Unify.term AST.t = match l with
+let rec annotate_literal
+  (env : Unify.term StrMap.t)
+  (l : PT.literal)
+  : Unify.term AST.t
+= match l with
   | PT.Boolean b ->
     let b' = AST.Boolean b in
     AST.Literal (b', Unify.constant boolean_id)
@@ -86,7 +90,11 @@ let rec annotate_literal env (l : PT.literal) : Unify.term AST.t = match l with
     let tms = Array.of_list (List.map AST.data es') in
     AST.Literal (AST.Tuple es', Unify.funktion (tuple_id, tms))
 
-and annotate env (e : PT.t) : Unify.term AST.t =
+and annotate
+  (env : Unify.term StrMap.t)
+  (e : PT.t)
+  : Unify.term AST.t
+=
   let env_add env id tm =
     let tm' = 
       try
