@@ -74,7 +74,7 @@ let constrain (e : Unify.term AST.t) : (Unify.term * Unify.term) list =
   let e0 = [e] in
   fn c0 e0
 
-let rec annotate_literal (l : PT.literal) : Unify.term AST.t = match l with
+let rec annotate_literal env (l : PT.literal) : Unify.term AST.t = match l with
   | PT.Boolean b ->
     let b' = AST.Boolean b in
     AST.Literal (b', Unify.constant boolean_id)
@@ -82,27 +82,11 @@ let rec annotate_literal (l : PT.literal) : Unify.term AST.t = match l with
     let i' = AST.Integer i in
     AST.Literal (i', Unify.constant integer_id)
   | PT.Tuple es ->
-    let es' = List.map annotate es in
+    let es' = List.map (annotate env) es in
     let tms = Array.of_list (List.map AST.data es') in
     AST.Literal (AST.Tuple es', Unify.funktion (tuple_id, tms))
 
-and annotate (e : PT.t) : Unify.term AST.t =
-  let env0 =
-    let tp = Array.of_list [
-      Unify.Function (
-        tuple_id,
-        Array.of_list [
-          Unify.constant integer_id;
-          Unify.constant integer_id
-        ]
-      );
-      Unify.constant integer_id
-    ] in
-    List.fold_left
-      (fun acc id -> StrMap.add id (Unify.Function (function_id, tp)) acc) 
-      (StrMap.empty)
-      ["+"; "-"; "*"; "/"; "%"]
-  in
+and annotate env (e : PT.t) : Unify.term AST.t =
   let env_add env id tm =
     let tm' = 
       try
@@ -127,7 +111,7 @@ and annotate (e : PT.t) : Unify.term AST.t =
         with Not_found ->
           failwith (Printf.sprintf "Unbound variable %s" id)
       end
-    | PT.Literal (l) -> annotate_literal l
+    | PT.Literal (l) -> annotate_literal env l
     | PT.BinaryOperation (op, exp1, exp2) ->
       fn env (
         PT.Application (
@@ -154,7 +138,7 @@ and annotate (e : PT.t) : Unify.term AST.t =
     | PT.Declaration _ ->
       failwith "Expected variable in let"
   in
-  fn env0 e
+  fn env e
 
 let rec literal_to_string (l : 'a AST.literal) : string = match l with
   | AST.Boolean b -> string_of_bool b
@@ -190,8 +174,24 @@ let constraint_to_string (tm1, tm2) =
       (Unify.term_to_string tm1)
       (Unify.term_to_string tm2)
 
+let env0 =
+  let tp = Array.of_list [
+    Unify.Function (
+      tuple_id,
+      Array.of_list [
+        Unify.constant integer_id;
+        Unify.constant integer_id
+      ]
+    );
+    Unify.constant integer_id
+  ] in
+  List.fold_left
+    (fun acc id -> StrMap.add id (Unify.Function (function_id, tp)) acc) 
+    (StrMap.empty)
+    ["+"; "-"; "*"; "/"; "%"]
+
 let infer e =
-  let tt = annotate e in
+  let tt = annotate env0 e in
   let cs = constrain tt in
   let s = Unify.unify (cs) in
   let tt' = AST.map (Unify.Substitution.apply s) tt in
