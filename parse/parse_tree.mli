@@ -12,6 +12,14 @@
 (** Variable names. *)
 type id = string
 
+(** The type of binary operations *)
+type binop =
+  | Addition
+  | Subtraction
+  | Multiplication
+  | Division
+  | Modulo
+
 (** The type of literal values. *)
 type literal =
   | Boolean of bool
@@ -22,12 +30,16 @@ type literal =
 and t =
   | Variable of id
   | Literal of literal
+  | BinaryOperation of binop * t * t
   | Abstraction of id * t
   | Application of t * t
   | Declaration of t * t * t
 
 
 (** {2 Functions} *)
+
+(** Returns the string representation of a binary operator *)
+val binop_to_string : binop -> string
 
 (** Returns the string representation of a parse tree. *)
 val to_string : t -> string

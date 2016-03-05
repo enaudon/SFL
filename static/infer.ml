@@ -87,6 +87,22 @@ let rec annotate_literal (l : PT.literal) : Unify.term AST.t = match l with
     AST.Literal (AST.Tuple es', Unify.funktion (tuple_id, tms))
 
 and annotate (e : PT.t) : Unify.term AST.t =
+  let env0 =
+    let tp = Array.of_list [
+      Unify.Function (
+        tuple_id,
+        Array.of_list [
+          Unify.constant integer_id;
+          Unify.constant integer_id
+        ]
+      );
+      Unify.constant integer_id
+    ] in
+    List.fold_left
+      (fun acc id -> StrMap.add id (Unify.Function (function_id, tp)) acc) 
+      (StrMap.empty)
+      ["+"; "-"; "*"; "/"; "%"]
+  in
   let env_add env id tm =
     let tm' = 
       try
@@ -112,6 +128,13 @@ and annotate (e : PT.t) : Unify.term AST.t =
           failwith (Printf.sprintf "Unbound variable %s" id)
       end
     | PT.Literal (l) -> annotate_literal l
+    | PT.BinaryOperation (op, exp1, exp2) ->
+      fn env (
+        PT.Application (
+          PT.Variable (PT.binop_to_string op),
+          PT.Literal (PT.Tuple [exp1; exp2])
+        )
+      )
     | PT.Abstraction (id, exp) ->
       let tm = Unify.variable (Unify.Identifier.fresh ()) in
       let env' = env_add env id tm in
@@ -131,7 +154,7 @@ and annotate (e : PT.t) : Unify.term AST.t =
     | PT.Declaration _ ->
       failwith "Expected variable in let"
   in
-  fn StrMap.empty e
+  fn env0 e
 
 let rec literal_to_string (l : 'a AST.literal) : string = match l with
   | AST.Boolean b -> string_of_bool b

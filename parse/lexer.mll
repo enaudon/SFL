@@ -29,6 +29,12 @@ rule token = parse
   | [' ' '\t']    { token lexbuf } (* skip blanks *)
   | ['\n']        { EOL }
 
+  | "+"           { PLUS }
+  | "-"           { MINUS }
+  | "*"           { ASTERIK }
+  | "/"           { FSLASH }
+  | "%"           { PERCENT }
+
   | ','           { COMMA }
   | '('           { LPAREN }
   | ')'           { RPAREN }
