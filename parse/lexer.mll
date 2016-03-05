@@ -29,6 +29,7 @@ rule token = parse
   | [' ' '\t']    { token lexbuf } (* skip blanks *)
   | ['\n']        { EOL }
 
+  | ','           { COMMA }
   | '('           { LPAREN }
   | ')'           { RPAREN }
   | "->"          { IMP }

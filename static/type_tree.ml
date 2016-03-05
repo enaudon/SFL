@@ -43,6 +43,7 @@ type typo =
   | Integer
   | Variable of TV.t
   | Function of typo * typo
+  | Product of typo list
   | Disjunction of typo list
 
 type t = typo AST.t
@@ -60,15 +61,21 @@ let rec typo_to_string tp = match tp with
     Printf.sprintf "(%s) -> %s" (typo_to_string t1) (typo_to_string t2)
   | Function (t1, t2) ->
     Printf.sprintf "%s -> %s" (typo_to_string t1) (typo_to_string t2)
+  | Product ts ->
+    Printf.sprintf "(%s)"
+      (String.concat " & " (List.map typo_to_string ts))
   | Disjunction (ts) ->
     let strs = List.map typo_to_string ts in
     Printf.sprintf "{%s}" (String.concat ", " strs)
 
-let literal_to_string l = match l with
+let rec literal_to_string l = match l with
   | AST.Boolean b -> string_of_bool b
   | AST.Integer i -> string_of_int i
+  | AST.Tuple es ->
+    Printf.sprintf "(%s)"
+      (String.concat ", " (List.map to_string es))
 
-let rec to_string tt = match tt with
+and to_string tt = match tt with
   | AST.Variable (id, tp) ->
     Printf.sprintf "%s : %s" id (typo_to_string tp)
   | AST.Literal (l, tp) ->

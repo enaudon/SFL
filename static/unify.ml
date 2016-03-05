@@ -128,7 +128,8 @@ let unify e =
               fn s e'
             else
               failwith "ununifiable"
-        | Disjunction (ts1), Disjunction (ts2) ->
+        | _, Disjunction _
+        | Disjunction _, _ ->
           failwith "cannot unify two disjunctions, yet"
   in
   let s = S.identity in

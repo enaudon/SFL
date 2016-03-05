@@ -11,6 +11,7 @@ module StrMap = Map.Make (String)
 
 let boolean_id = Unify.Identifier.fresh ()
 let integer_id = Unify.Identifier.fresh ()
+let tuple_id = Unify.Identifier.fresh ()
 let function_id = Unify.Identifier.fresh ()
 
 let typo_of_term (t : Unify.term) : TT.typo =
@@ -32,6 +33,9 @@ let typo_of_term (t : Unify.term) : TT.typo =
           TT.Boolean
         | _ when id = integer_id -> 
           TT.Integer
+        | _ when id = tuple_id -> 
+          let typos = Array.to_list (Array.map fn terms) in
+          TT.Product typos
         | _ when id = function_id -> 
           let typos = Array.map fn terms in
           let tp1 = Array.get typos 0 in
@@ -70,15 +74,19 @@ let constrain (e : Unify.term AST.t) : (Unify.term * Unify.term) list =
   let e0 = [e] in
   fn c0 e0
 
-let annotate_literal l = match l with
+let rec annotate_literal (l : PT.literal) : Unify.term AST.t = match l with
   | PT.Boolean b ->
     let b' = AST.Boolean b in
-    AST.Literal (b', Unify.constant (boolean_id))
+    AST.Literal (b', Unify.constant boolean_id)
   | PT.Integer i ->
     let i' = AST.Integer i in
-    AST.Literal (i', Unify.constant (integer_id))
+    AST.Literal (i', Unify.constant integer_id)
+  | PT.Tuple es ->
+    let es' = List.map annotate es in
+    let tms = Array.of_list (List.map AST.data es') in
+    AST.Literal (AST.Tuple es', Unify.funktion (tuple_id, tms))
 
-let annotate (e : PT.t) : Unify.term AST.t =
+and annotate (e : PT.t) : Unify.term AST.t =
   let env_add env id tm =
     let tm' = 
       try
@@ -123,13 +131,16 @@ let annotate (e : PT.t) : Unify.term AST.t =
     | PT.Declaration _ ->
       failwith "Expected variable in let"
   in
-  fn (StrMap.empty) e
+  fn StrMap.empty e
 
-let literal_to_string (l : AST.literal) : string = match l with
+let rec literal_to_string (l : 'a AST.literal) : string = match l with
   | AST.Boolean b -> string_of_bool b
   | AST.Integer i -> string_of_int i
+  | AST.Tuple es ->
+    Printf.sprintf "(%s)"
+      (String.concat ", " (List.map to_string es))
 
-let rec to_string tt = match tt with
+and to_string tt = match tt with
   | AST.Variable (id, tp) ->
     Printf.sprintf "%s : %s" id (Unify.term_to_string tp)
   | AST.Literal (l, tp) ->

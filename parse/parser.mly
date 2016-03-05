@@ -14,6 +14,7 @@ let error msg nterm =
 %}
 
 %token <string> VAR
+%token COMMA
 %token LPAREN RPAREN
 %token IMP APP
 %token EOL
@@ -36,12 +37,26 @@ main:
   | error                   { failwith (error "expected expression" 1) }
 ;
 
+literal:
+  | INTEGER           { PT.Integer $1 }
+  | BOOLEAN           { PT.Boolean $1 }
+  | tuple             { PT.Tuple $1 }
+;
+
+tuple:
+  | LPAREN exp_comma_list RPAREN  { List.rev $2 }
+;
+
+exp_comma_list:
+  | exp                       { [$1] }
+  | exp_comma_list COMMA exp  { $3 :: $1 }
+;
+
 exp:
-  | INTEGER                         { PT.Literal (PT.Integer $1) }
-  | BOOLEAN                         { PT.Literal (PT.Boolean $1) }
+  | literal                         { PT.Literal ($1) }
   | VAR                             { PT.Variable $1 }
-  | VAR IMP exp %prec FUN           { PT.Abstraction ($1, $3) }
-  | exp exp %prec APP               { PT.Application ($1, $2) }   /* S/R */
+  | VAR IMP LPAREN exp RPAREN       { PT.Abstraction ($1, $4) }
+  | exp LPAREN exp RPAREN           { PT.Application ($1, $3) }   /* S/R */
   | LET exp EQUAL exp IN exp END    { PT.Declaration ($2, $4, $6) }
   | LPAREN exp RPAREN               { $2 }
 ;

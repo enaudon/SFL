@@ -16,9 +16,10 @@ type id = string
 type literal =
   | Boolean of bool
   | Integer of int
+  | Tuple of t list
 
 (** The type of parse trees. *)
-type t =
+and t =
   | Variable of id
   | Literal of literal
   | Abstraction of id * t

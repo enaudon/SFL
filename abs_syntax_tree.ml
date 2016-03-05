@@ -5,13 +5,14 @@
 
 type id = string
 
-type literal =
+type 'a literal =
   | Boolean of bool
   | Integer of int
+  | Tuple of 'a t list
 
-type 'a t =
+and 'a t =
   | Variable of id * 'a
-  | Literal of literal * 'a
+  | Literal of 'a literal * 'a
   | Abstraction of id * 'a t * 'a
   | Application of 'a t * 'a t * 'a
   | Declaration of id * 'a t * 'a t * 'a
@@ -28,8 +29,14 @@ let rec map fn e = match e with
     let data' = fn data in
     Variable (id, data')
   | Literal (l, data) ->
+    let rec helper l = match l with
+      | Boolean b -> Boolean b
+      | Integer i -> Integer i
+      | Tuple es -> Tuple (List.map (map fn) es)
+    in
+    let l' = helper l in
     let data' = fn data in
-    Literal (l, data')
+    Literal (l', data')
   | Abstraction (id, exp, data) ->
     let data' = fn data in
     let exp' = map fn exp in

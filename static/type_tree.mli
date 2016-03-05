@@ -45,6 +45,7 @@ type typo =
   | Integer
   | Variable of TypeVariable.t
   | Function of typo * typo
+  | Product of typo list
   | Disjunction of typo list
 
 (** The type of type trees. *)
