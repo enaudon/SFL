@@ -15,7 +15,9 @@ let error msg nterm =
 
 %token <string> VAR
 %token PLUS MINUS ASTERIK FSLASH PERCENT
+%token AMPERSAND OBELISK
 %token COMMA
+%token LPAREN RPAREN LBRACE RBRACE LCHEVR RCHEVR
 %token LPAREN RPAREN
 %token IMP APP
 %token EOL
@@ -47,12 +49,7 @@ literal:
 ;
 
 tuple:
-  | LPAREN exp_comma_list RPAREN  { List.rev $2 }
-;
-
-exp_comma_list:
-  | exp                       { [$1] }
-  | exp_comma_list COMMA exp  { $3 :: $1 }
+  | LPAREN exp_amp_list RPAREN  { List.rev $2 }
 ;
 
 exp:
@@ -63,8 +60,13 @@ exp:
   | exp ASTERIK exp   { PT.BinaryOperation (PT.Multiplication, $1, $3) }
   | exp FSLASH exp    { PT.BinaryOperation (PT.Division, $1, $3) }
   | exp PERCENT exp   { PT.BinaryOperation (PT.Modulo, $1, $3) }
-  | VAR IMP LPAREN exp RPAREN       { PT.Abstraction ($1, $4) }
-  | exp LPAREN exp RPAREN           { PT.Application ($1, $3) }   /* S/R */
-  | LET exp EQUAL exp IN exp END    { PT.Declaration ($2, $4, $6) }
-  | LPAREN exp RPAREN               { $2 }
+  | VAR IMP LBRACE exp RBRACE   { PT.Abstraction ($1, $4) }
+  | exp LPAREN exp RPAREN         { PT.Application ($1, $3) }   /* S/R */
+  | LET exp EQUAL exp IN exp END  { PT.Declaration ($2, $4, $6) }
+  | LPAREN exp RPAREN             { $2 }
+;
+
+exp_amp_list:
+  | /* empty */                 { [] }
+  | exp_amp_list AMPERSAND exp  { $3 :: $1 }
 ;

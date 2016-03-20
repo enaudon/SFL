@@ -35,9 +35,17 @@ rule token = parse
   | "/"           { FSLASH }
   | "%"           { PERCENT }
 
-  | ','           { COMMA }
+  | "&"           { AMPERSAND }
+  | "|"           { OBELISK }
+
   | '('           { LPAREN }
   | ')'           { RPAREN }
+  | '{'           { LBRACE }
+  | '}'           { RBRACE }
+  | '<'           { LCHEVR }
+  | '>'           { RCHEVR }
+
+  | ','           { COMMA }
   | "->"          { IMP }
   | "="           { EQUAL }
 
