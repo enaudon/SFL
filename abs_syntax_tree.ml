@@ -29,7 +29,7 @@ let rec map fn e = match e with
     let data' = fn data in
     Variable (id, data')
   | Literal (l, data) ->
-    let rec helper l = match l with
+    let helper l = match l with
       | Boolean b -> Boolean b
       | Integer i -> Integer i
       | Tuple es -> Tuple (List.map (map fn) es)
