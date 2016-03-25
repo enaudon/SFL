@@ -38,6 +38,9 @@ rule token = parse
   | "&"           { AMPERSAND }
   | "|"           { OBELISK }
 
+  | ','           { COMMA }
+  | ';'           { SEMICOLON }
+
   | '('           { LPAREN }
   | ')'           { RPAREN }
   | '{'           { LBRACE }
@@ -45,7 +48,6 @@ rule token = parse
   | '<'           { LCHEVR }
   | '>'           { RCHEVR }
 
-  | ','           { COMMA }
   | "->"          { IMP }
   | "="           { EQUAL }
 

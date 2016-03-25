@@ -16,7 +16,7 @@ let error msg nterm =
 %token <string> VAR
 %token PLUS MINUS ASTERIK FSLASH PERCENT
 %token AMPERSAND OBELISK
-%token COMMA
+%token COMMA SEMICOLON
 %token LPAREN RPAREN LBRACE RBRACE LCHEVR RCHEVR
 %token LPAREN RPAREN
 %token IMP APP
@@ -60,7 +60,7 @@ exp:
   | exp ASTERIK exp   { PT.BinaryOperation (PT.Multiplication, $1, $3) }
   | exp FSLASH exp    { PT.BinaryOperation (PT.Division, $1, $3) }
   | exp PERCENT exp   { PT.BinaryOperation (PT.Modulo, $1, $3) }
-  | VAR IMP LBRACE exp RBRACE   { PT.Abstraction ($1, $4) }
+  | LPAREN VAR RPAREN LBRACE exp RBRACE   { PT.Abstraction ($2, $5) }
   | exp LPAREN exp RPAREN         { PT.Application ($1, $3) }   /* S/R */
   | LET exp EQUAL exp IN exp END  { PT.Declaration ($2, $4, $6) }
   | LPAREN exp RPAREN             { $2 }
