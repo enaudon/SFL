@@ -33,9 +33,26 @@ let error msg nterm =
 %left ASTERIK FSLASH PERCENT
 
 %start main
-%type <Parse_tree.t> main
+%start top
+%start top_list
+%type <Parse_tree.exp> main
+%type <Parse_tree.top> top
+%type <Parse_tree.top list> top_list
 
 %%
+
+top:
+  | VAR EQUAL exp
+    { PT.VariableDecl ($1, $3) }
+  | VAR LPAREN var_comma_list RPAREN EQUAL exp
+    { PT.FunctionDecl ($1, List.rev $3, $6) }
+  | exp
+    { PT.Expression $1 }
+;
+top_list:
+  | /* empty */       { [] }
+  | top_list EOL top  { $3 :: $1 }
+;
 
 main:
   | exp EOL                 { $1 }
@@ -64,6 +81,11 @@ exp:
   | exp LPAREN exp RPAREN         { PT.Application ($1, $3) }   /* S/R */
   | LET exp EQUAL exp IN exp END  { PT.Declaration ($2, $4, $6) }
   | LPAREN exp RPAREN             { $2 }
+;
+
+var_comma_list:
+  | /* empty */               { [] }
+  | var_comma_list COMMA VAR  { $3 :: $1 }
 ;
 
 exp_amp_list:

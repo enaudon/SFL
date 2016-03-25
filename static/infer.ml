@@ -92,7 +92,7 @@ let rec annotate_literal
 
 and annotate
   (env : Unify.term StrMap.t)
-  (e : PT.t)
+  (e : PT.exp)
   : Unify.term AST.t
 =
   let env_add env id tm =

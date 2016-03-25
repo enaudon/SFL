@@ -1,3 +1,3 @@
 (** Type Inference *)
 
-val infer : Parse_tree.t -> Type_tree.t
+val infer : Parse_tree.exp -> Type_tree.t

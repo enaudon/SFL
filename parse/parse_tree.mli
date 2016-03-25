@@ -24,22 +24,29 @@ type binop =
 type literal =
   | Boolean of bool
   | Integer of int
-  | Tuple of t list
+  | Tuple of exp list
 
-(** The type of parse trees. *)
-and t =
+(** The type of parse tree expressions. *)
+and exp =
   | Variable of id
   | Literal of literal
-  | BinaryOperation of binop * t * t
-  | Abstraction of id * t
-  | Application of t * t
-  | Declaration of t * t * t
+  | BinaryOperation of binop * exp * exp
+  | Application of exp * exp
+  | Abstraction of id * exp
+  | Declaration of exp * exp * exp
 
+type top =
+  | VariableDecl of id * exp
+  | FunctionDecl of id * id list * exp
+  | Expression of exp
 
 (** {2 Functions} *)
 
 (** Returns the string representation of a binary operator *)
 val binop_to_string : binop -> string
 
-(** Returns the string representation of a parse tree. *)
-val to_string : t -> string
+(** Returns the string representation of an expression. *)
+val to_string : exp -> string
+
+(** Returns the string representation of a top. *)
+val top_to_string : top -> string

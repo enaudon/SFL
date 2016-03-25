@@ -14,15 +14,20 @@ type binop =
 type literal =
   | Boolean of bool
   | Integer of int
-  | Tuple of t list
+  | Tuple of exp list
 
-and t =
+and exp =
   | Variable of id
   | Literal of literal
-  | BinaryOperation of binop * t * t
-  | Abstraction of id * t
-  | Application of t * t
-  | Declaration of t * t * t
+  | BinaryOperation of binop * exp * exp
+  | Application of exp * exp
+  | Abstraction of id * exp
+  | Declaration of exp * exp * exp
+
+type top =
+  | VariableDecl of id * exp
+  | FunctionDecl of id * id list * exp
+  | Expression of exp
 
 let binop_to_string op = match op with
   | Addition -> "+"
@@ -62,3 +67,12 @@ and to_string pt =
         (to_string pt1)
         (to_string pt2)
         (to_string pt3)
+
+let top_to_string top = match top with
+  | VariableDecl (id, exp) ->
+    Printf.sprintf "%s = %s\n" id (to_string exp)
+  | FunctionDecl (id, args, body) ->
+    let args_str = String.concat ", " args in
+    Printf.sprintf "%s(%s) = %s\n" id args_str (to_string body)
+  | Expression exp ->
+    Printf.sprintf "%s\n" (to_string exp)

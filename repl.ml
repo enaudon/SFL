@@ -7,7 +7,7 @@ module PT = Parse_tree
 module TT = Type_tree
 
 
-let parse (s : string) : PT.t =
+let parse s =
   Parser.main Lexer.token (Lexing.from_string s)
 
 let rec repl () =
