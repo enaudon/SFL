@@ -21,6 +21,7 @@ and exp =
   | Literal of literal
   | BinaryOperation of binop * exp * exp
   | Application of exp * exp
+  | Binding of (id * exp) list * exp
 
 type top =
   | Declaration of exp * exp
@@ -56,7 +57,12 @@ and exp_to_string pt =
         (binop_to_string op)
         (exp_to_string pt2)
     | Application (pt1, pt2) ->
-      Printf.sprintf "%s %s" (paren pt1) (paren pt2)
+      Printf.sprintf "%s(%s)" (paren pt1) (exp_to_string pt2)
+    | Binding (binds, pt) ->
+      let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
+      Printf.sprintf "let %s in %s"
+        (String.concat "; " (List.map fn binds))
+        (exp_to_string pt)
 
 let top_to_string top = match top with
   | Declaration (exp1, exp2) ->

@@ -32,6 +32,7 @@ and exp =
   | Literal of literal
   | BinaryOperation of binop * exp * exp
   | Application of exp * exp
+  | Binding of (id * exp) list * exp
 
 type top =
   | Declaration of exp * exp

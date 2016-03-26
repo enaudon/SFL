@@ -53,7 +53,6 @@ rule token = parse
 
   | "let"         { Printf.printf "LET %!"; LET }
   | "in"          { Printf.printf "IN %!"; IN }
-  | "end"         { Printf.printf "END %!"; END }
 
   | "false"       { Printf.printf "true %!"; BOOLEAN false }
   | "true"        { Printf.printf "false %!"; BOOLEAN true }
@@ -62,7 +61,8 @@ rule token = parse
 
   | eof           { Printf.printf "\n%!"; EOF }
 
-  | _ {
+  | _
+    {
       Printf.printf "unexpected character %!";
       let start = lexeme_start_p lexbuf in
       let finish = lexeme_end_p lexbuf in

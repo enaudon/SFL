@@ -20,14 +20,13 @@ let error msg nterm =
 %token LPAREN RPAREN LBRACE RBRACE LCHEVR RCHEVR
 %token IMP
 %token EQUAL
-%token LET IN END
+%token LET IN
 %token <bool> BOOLEAN
 %token <int> INTEGER
 %token EOL EOF
 
-%nonassoc FUN
-%nonassoc VAR LPAREN
-%left APP
+%nonassoc LET
+%nonassoc LPAREN RPAREN
 %left PLUS MINUS
 %left ASTERIK FSLASH PERCENT
 
@@ -55,11 +54,6 @@ top_list:
 literal:
   | INTEGER           { PT.Integer $1 }
   | BOOLEAN           { PT.Boolean $1 }
-  | tuple             { PT.Tuple $1 }
-;
-
-tuple:
-  | LPAREN exp_amp_list RPAREN  { List.rev $2 }
 ;
 
 exp:
@@ -68,18 +62,20 @@ exp:
   | exp PLUS exp      { PT.BinaryOperation (PT.Addition, $1, $3) }
   | exp MINUS exp     { PT.BinaryOperation (PT.Subtraction, $1, $3) }
   | exp ASTERIK exp   { PT.BinaryOperation (PT.Multiplication, $1, $3) }
+  | INTEGER VAR
+    {
+      PT.BinaryOperation (PT.Multiplication,
+        PT.Literal (PT.Integer $1), PT.Variable $2
+      )
+    }
   | exp FSLASH exp    { PT.BinaryOperation (PT.Division, $1, $3) }
   | exp PERCENT exp   { PT.BinaryOperation (PT.Modulo, $1, $3) }
-  | exp LPAREN exp RPAREN         { PT.Application ($1, $3) }   /* S/R */
-  | LPAREN exp RPAREN             { $2 }
+  | exp LPAREN exp RPAREN               { PT.Application ($1, $3) }
+  | LET binding_list IN exp %prec LET   { PT.Binding (List.rev $2, $4) }
+  | LPAREN exp RPAREN                   { $2 }
 ;
 
-var_comma_list:
-  | /* empty */               { [] }
-  | var_comma_list COMMA VAR  { $3 :: $1 }
-;
-
-exp_amp_list:
-  | /* empty */                 { [] }
-  | exp_amp_list AMPERSAND exp  { $3 :: $1 }
+binding_list:
+  | VAR EQUAL exp                         { [$1, $3] }
+  | binding_list SEMICOLON VAR EQUAL exp  { ($3, $5) :: $1 }
 ;
