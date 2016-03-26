@@ -13,23 +13,22 @@ type id = string
 type 'a literal =
   | Boolean of bool
   | Integer of int
-  | Tuple of 'a t list
+  | Tuple of 'a exp list
 
 (** The type of abstract syntax trees of type ['a].  An abstact syntax
     tree carries data at each node.
  *)
-and 'a t =
+and 'a exp =
   | Variable of id * 'a
   | Literal of 'a literal * 'a
-  | Abstraction of id * 'a t * 'a
-  | Application of 'a t * 'a t * 'a
-  | Declaration of id * 'a t * 'a t * 'a
+  | Application of 'a exp * 'a exp * 'a
+  | Binding of (id * 'a exp) list * 'a exp * 'a
 
 (** Returns the data associated with an abstract syntax tree. *)
-val data : 'a t -> 'a
+val data : 'a exp -> 'a
 
 (** [map fn ast] returns a new abstract syntax tree with the same
     structure as [ast], but where the data, [d], at with each node has
     been replaced with the result of applying [fn] to [d].
  *)
-val map : ('a -> 'b) -> 'a t -> 'b t
+val map : ('a -> 'b) -> 'a exp -> 'b exp

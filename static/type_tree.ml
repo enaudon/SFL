@@ -46,7 +46,7 @@ type typo =
   | Product of typo list
   | Disjunction of typo list
 
-type t = typo AST.t
+type t = typo AST.exp
 
 let to_typo tt = AST.data tt
 
@@ -80,19 +80,13 @@ and to_string tt = match tt with
     Printf.sprintf "%s : %s" id (typo_to_string tp)
   | AST.Literal (l, tp) ->
     Printf.sprintf "%s : %s" (literal_to_string l) (typo_to_string tp)
-  | AST.Abstraction (id, e, tp) ->
-    Printf.sprintf "((%s -> %s) : %s)"
-      id
-      (to_string e)
-      (typo_to_string tp)
   | AST.Application (e1, e2, tp) ->
     Printf.sprintf "((%s %s) : %s)"
       (to_string e1)
       (to_string e2)
       (typo_to_string tp)
-  | AST.Declaration (id, e1, e2, tp) ->
-    Printf.sprintf "(let %s = %s in %s end : %s)"
-      id
-      (to_string e1)
-      (to_string e2)
-      (typo_to_string tp)
+  | AST.Binding (binds, e, _) ->
+    let fn (id, e) = Printf.sprintf "%s = %s" id (to_string e) in
+    Printf.sprintf "let %s in %s"
+      (String.concat "; " (List.map fn binds))
+      (to_string e)

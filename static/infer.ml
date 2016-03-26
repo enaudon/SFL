@@ -49,16 +49,13 @@ let typo_of_term (t : Unify.term) : TT.typo =
   in
   fn t
 
-let constrain (e : Unify.term AST.t) : (Unify.term * Unify.term) list =
+let constrain (e : Unify.term AST.exp) : (Unify.term * Unify.term) list =
   let rec fn c e = match e with
     | [] -> c
     | AST.Variable (_) :: es ->
       fn c es
     | AST.Literal (_) :: es ->
       fn c es
-    | AST.Abstraction (_, exp, _) :: es ->
-      let e' = (exp :: es) in
-      fn c e'
     | AST.Application (exp1, exp2, tp) :: es ->
       let exp1_tp = AST.data exp1 in
       let exp2_tp = AST.data exp2 in
@@ -66,9 +63,16 @@ let constrain (e : Unify.term AST.t) : (Unify.term * Unify.term) list =
       let c' = (exp1_tp, Unify.funktion (function_id, terms)) :: c in
       let e' = exp1 :: exp2 :: es in
       fn c' e'
+    | AST.Binding (binds, exp, _) :: es ->
+      let bind_fn (_, e) es = e :: es in
+      let es' = List.fold_right bind_fn binds es in
+      let e' = exp :: es' in
+      fn c e'
+(*
     | AST.Declaration (_, exp1, exp2, _) :: es ->
       let e' = (exp1 :: exp2 :: es) in
       fn c e'
+*)
   in
   let c0 = [] in
   let e0 = [e] in
@@ -77,7 +81,7 @@ let constrain (e : Unify.term AST.t) : (Unify.term * Unify.term) list =
 let rec annotate_literal
   (env : Unify.term StrMap.t)
   (l : PT.literal)
-  : Unify.term AST.t
+  : Unify.term AST.exp
 = match l with
   | PT.Boolean b ->
     let b' = AST.Boolean b in
@@ -93,7 +97,7 @@ let rec annotate_literal
 and annotate_expression
   (env : Unify.term StrMap.t)
   (e : PT.exp)
-  : Unify.term AST.t
+  : Unify.term AST.exp
 =
   let env_add env id tm =
     let tm' = 
@@ -139,14 +143,15 @@ and annotate_expression
       let exp' = fn env' exp in
       let terms = Array.of_list [tm; AST.data exp'] in
       AST.Abstraction (id, exp', Unify.funktion (function_id, terms))
-    | PT.Declaration (PT.Variable id, exp1, exp2) ->
-      let exp1' = fn env exp1 in
-      let env' = env_add env id (AST.data exp1') in
-      let exp2' = fn env' exp2 in
-      AST.Declaration (id, exp1', exp2', AST.data exp2')
-    | PT.Declaration _ ->
-      failwith "Expected variable in let"
 *)
+    | PT.Binding (binds, exp) ->
+      let bind_fn (env, binds) (id, exp) = 
+        let exp' = fn env exp in
+        env_add env id (AST.data exp'), (id, exp') :: binds
+      in
+      let env', binds' = List.fold_left bind_fn (env, []) binds in
+      let exp' = fn env' exp in
+      AST.Binding (binds', exp', AST.data exp')
   in
   fn env e
 
@@ -155,29 +160,23 @@ let rec literal_to_string (l : 'a AST.literal) : string = match l with
   | AST.Integer i -> string_of_int i
   | AST.Tuple es ->
     Printf.sprintf "(%s)"
-      (String.concat ", " (List.map to_string es))
+      (String.concat ", " (List.map exp_to_string es))
 
-and to_string tt = match tt with
+and exp_to_string tt = match tt with
   | AST.Variable (id, tp) ->
     Printf.sprintf "%s : %s" id (Unify.term_to_string tp)
   | AST.Literal (l, tp) ->
     Printf.sprintf "%s : %s" (literal_to_string l) (Unify.term_to_string tp)
-  | AST.Abstraction (id, e, tp) ->
-    Printf.sprintf "((%s -> %s) : %s)"
-      id
-      (to_string e)
-      (Unify.term_to_string tp)
   | AST.Application (e1, e2, tp) ->
     Printf.sprintf "((%s %s) : %s)"
-      (to_string e1)
-      (to_string e2)
+      (exp_to_string e1)
+      (exp_to_string e2)
       (Unify.term_to_string tp)
-  | AST.Declaration (id, e1, e2, tp) ->
-    Printf.sprintf "(let %s = %s in %s end : %s)"
-      id
-      (to_string e1)
-      (to_string e2)
-      (Unify.term_to_string tp)
+  | AST.Binding (binds, e, _) ->
+    let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
+    Printf.sprintf "let %s in %s"
+      (String.concat "; " (List.map fn binds))
+      (exp_to_string e)
 
 let constraint_to_string (tm1, tm2) =
     Printf.sprintf "%s = %s\n%!"

@@ -49,7 +49,7 @@ type typo =
   | Disjunction of typo list
 
 (** The type of type trees. *)
-type t = typo Abs_syntax_tree.t
+type t = typo Abs_syntax_tree.exp
 
 
 (** {2 Functions} *)
