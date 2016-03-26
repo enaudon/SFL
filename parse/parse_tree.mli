@@ -32,12 +32,9 @@ and exp =
   | Literal of literal
   | BinaryOperation of binop * exp * exp
   | Application of exp * exp
-  | Abstraction of id * exp
-  | Declaration of exp * exp * exp
 
 type top =
-  | VariableDecl of id * exp
-  | FunctionDecl of id * id list * exp
+  | Declaration of exp * exp
   | Expression of exp
 
 (** {2 Functions} *)
@@ -46,7 +43,7 @@ type top =
 val binop_to_string : binop -> string
 
 (** Returns the string representation of an expression. *)
-val to_string : exp -> string
+val exp_to_string : exp -> string
 
 (** Returns the string representation of a top. *)
 val top_to_string : top -> string

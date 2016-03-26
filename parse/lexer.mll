@@ -26,43 +26,44 @@ let decnum = ['0'-'9']*
 
 
 rule token = parse
-  | [' ' '\t']    { token lexbuf } (* skip blanks *)
-  | ['\n']        { EOL }
+  | [' ' '\t']    { token lexbuf }
+  | ['\n']        { Printf.printf "\n%!"; token lexbuf }
 
-  | "+"           { PLUS }
-  | "-"           { MINUS }
-  | "*"           { ASTERIK }
-  | "/"           { FSLASH }
-  | "%"           { PERCENT }
+  | "+"           { Printf.printf "PLUS %!"; PLUS }
+  | "-"           { Printf.printf "MINIUS %!"; MINUS }
+  | "*"           { Printf.printf "ASTERIK %!"; ASTERIK }
+  | "/"           { Printf.printf "FSLASH %!"; FSLASH }
+  | "%"           { Printf.printf "PER %!"; PERCENT }
 
-  | "&"           { AMPERSAND }
-  | "|"           { OBELISK }
+  | "&"           { Printf.printf "AMP %!"; AMPERSAND }
+  | "|"           { Printf.printf "OBEL %!"; OBELISK }
 
-  | ','           { COMMA }
-  | ';'           { SEMICOLON }
+  | ','           { Printf.printf "COMMA %!"; COMMA }
+  | ';'           { Printf.printf "SEMI %!"; SEMICOLON }
 
-  | '('           { LPAREN }
-  | ')'           { RPAREN }
-  | '{'           { LBRACE }
-  | '}'           { RBRACE }
-  | '<'           { LCHEVR }
-  | '>'           { RCHEVR }
+  | '('           { Printf.printf "LPAREN %!"; LPAREN }
+  | ')'           { Printf.printf "RPAREN %!"; RPAREN }
+  | '{'           { Printf.printf "LBRACE %!"; LBRACE }
+  | '}'           { Printf.printf "RBRACE %!"; RBRACE }
+  | '<'           { Printf.printf "LCHEVR %!"; LCHEVR }
+  | '>'           { Printf.printf "RCHEVR %!"; RCHEVR }
 
-  | "->"          { IMP }
-  | "="           { EQUAL }
+  | "->"          { Printf.printf "IMP %!"; IMP }
+  | "="           { Printf.printf "EQUAL %!"; EQUAL }
 
-  | "let"         { LET }
-  | "in"          { IN }
-  | "end"         { END }
+  | "let"         { Printf.printf "LET %!"; LET }
+  | "in"          { Printf.printf "IN %!"; IN }
+  | "end"         { Printf.printf "END %!"; END }
 
-  | "false"       { BOOLEAN false }
-  | "true"        { BOOLEAN true }
-  | decnum as n   { create_integer n lexbuf }
-  | identifier as id  { VAR id }
+  | "false"       { Printf.printf "true %!"; BOOLEAN false }
+  | "true"        { Printf.printf "false %!"; BOOLEAN true }
+  | decnum as n   { Printf.printf "NUM %!"; create_integer n lexbuf }
+  | identifier as id  { Printf.printf "VAR %!"; VAR id }
 
-  | eof           { EOL }
+  | eof           { Printf.printf "\n%!"; EOF }
 
   | _ {
+      Printf.printf "unexpected character %!";
       let start = lexeme_start_p lexbuf in
       let finish = lexeme_end_p lexbuf in
       failwith ( Printf.sprintf

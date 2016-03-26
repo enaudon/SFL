@@ -18,13 +18,12 @@ let error msg nterm =
 %token AMPERSAND OBELISK
 %token COMMA SEMICOLON
 %token LPAREN RPAREN LBRACE RBRACE LCHEVR RCHEVR
-%token LPAREN RPAREN
-%token IMP APP
-%token EOL
+%token IMP
 %token EQUAL
 %token LET IN END
 %token <bool> BOOLEAN
 %token <int> INTEGER
+%token EOL EOF
 
 %nonassoc FUN
 %nonassoc VAR LPAREN
@@ -32,31 +31,25 @@ let error msg nterm =
 %left PLUS MINUS
 %left ASTERIK FSLASH PERCENT
 
-%start main
 %start top
 %start top_list
-%type <Parse_tree.exp> main
+
 %type <Parse_tree.top> top
 %type <Parse_tree.top list> top_list
 
 %%
 
 top:
-  | VAR EQUAL exp
-    { PT.VariableDecl ($1, $3) }
-  | VAR LPAREN var_comma_list RPAREN EQUAL exp
-    { PT.FunctionDecl ($1, List.rev $3, $6) }
+  | exp EQUAL exp
+    { PT.Declaration ($1, $3) }
   | exp
     { PT.Expression $1 }
+  | error
+    { failwith (error "expected declaration or expression" 1) }
 ;
 top_list:
   | /* empty */       { [] }
   | top_list EOL top  { $3 :: $1 }
-;
-
-main:
-  | exp EOL                 { $1 }
-  | error                   { failwith (error "expected expression" 1) }
 ;
 
 literal:
@@ -77,9 +70,7 @@ exp:
   | exp ASTERIK exp   { PT.BinaryOperation (PT.Multiplication, $1, $3) }
   | exp FSLASH exp    { PT.BinaryOperation (PT.Division, $1, $3) }
   | exp PERCENT exp   { PT.BinaryOperation (PT.Modulo, $1, $3) }
-  | LPAREN VAR RPAREN LBRACE exp RBRACE   { PT.Abstraction ($2, $5) }
   | exp LPAREN exp RPAREN         { PT.Application ($1, $3) }   /* S/R */
-  | LET exp EQUAL exp IN exp END  { PT.Declaration ($2, $4, $6) }
   | LPAREN exp RPAREN             { $2 }
 ;
 

@@ -86,11 +86,11 @@ let rec annotate_literal
     let i' = AST.Integer i in
     AST.Literal (i', Unify.constant integer_id)
   | PT.Tuple es ->
-    let es' = List.map (annotate env) es in
+    let es' = List.map (annotate_expression env) es in
     let tms = Array.of_list (List.map AST.data es') in
     AST.Literal (AST.Tuple es', Unify.funktion (tuple_id, tms))
 
-and annotate
+and annotate_expression
   (env : Unify.term StrMap.t)
   (e : PT.exp)
   : Unify.term AST.t
@@ -127,17 +127,18 @@ and annotate
           PT.Literal (PT.Tuple [exp1; exp2])
         )
       )
+    | PT.Application (exp1, exp2) ->
+      let tm = Unify.variable (Unify.Identifier.fresh ()) in
+      let exp1' = fn env exp1 in
+      let exp2' = fn env exp2 in
+      AST.Application (exp1', exp2', tm)
+(*
     | PT.Abstraction (id, exp) ->
       let tm = Unify.variable (Unify.Identifier.fresh ()) in
       let env' = env_add env id tm in
       let exp' = fn env' exp in
       let terms = Array.of_list [tm; AST.data exp'] in
       AST.Abstraction (id, exp', Unify.funktion (function_id, terms))
-    | PT.Application (exp1, exp2) ->
-      let tm = Unify.variable (Unify.Identifier.fresh ()) in
-      let exp1' = fn env exp1 in
-      let exp2' = fn env exp2 in
-      AST.Application (exp1', exp2', tm)
     | PT.Declaration (PT.Variable id, exp1, exp2) ->
       let exp1' = fn env exp1 in
       let env' = env_add env id (AST.data exp1') in
@@ -145,6 +146,7 @@ and annotate
       AST.Declaration (id, exp1', exp2', AST.data exp2')
     | PT.Declaration _ ->
       failwith "Expected variable in let"
+*)
   in
   fn env e
 
@@ -199,7 +201,7 @@ let env0 =
     ["+"; "-"; "*"; "/"; "%"]
 
 let infer e =
-  let tt = annotate env0 e in
+  let tt = annotate_expression env0 e in
   let cs = constrain tt in
   let s = Unify.unify (cs) in
   let tt' = AST.map (Unify.Substitution.apply s) tt in
