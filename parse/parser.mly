@@ -26,6 +26,7 @@ let error msg nterm =
 %token EOL EOF
 
 %nonassoc LET
+%nonassoc LITERAL
 %nonassoc LPAREN RPAREN
 %left PLUS MINUS
 %left ASTERIK FSLASH PERCENT
@@ -52,22 +53,18 @@ top_list:
 ;
 
 literal:
-  | INTEGER           { PT.Integer $1 }
-  | BOOLEAN           { PT.Boolean $1 }
+  | INTEGER   { PT.Integer $1 }
+  | BOOLEAN   { PT.Boolean $1 }
 ;
 
 exp:
-  | literal           { PT.Literal ($1) }
+  | literal %prec LITERAL { PT.Literal ($1) }
   | VAR               { PT.Variable $1 }
   | exp PLUS exp      { PT.BinaryOperation (PT.Addition, $1, $3) }
   | exp MINUS exp     { PT.BinaryOperation (PT.Subtraction, $1, $3) }
   | exp ASTERIK exp   { PT.BinaryOperation (PT.Multiplication, $1, $3) }
-  | INTEGER VAR
-    {
-      PT.BinaryOperation (PT.Multiplication,
-        PT.Literal (PT.Integer $1), PT.Variable $2
-      )
-    }
+  | literal exp %prec ASTERIK
+    { PT.BinaryOperation (PT.Multiplication, PT.Literal $1, $2) }
   | exp FSLASH exp    { PT.BinaryOperation (PT.Division, $1, $3) }
   | exp PERCENT exp   { PT.BinaryOperation (PT.Modulo, $1, $3) }
   | exp LPAREN exp RPAREN               { PT.Application ($1, $3) }

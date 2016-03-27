@@ -52,7 +52,7 @@ and exp_to_string pt =
     | Variable x -> x
     | Literal l -> literal_to_string l
     | BinaryOperation (op, pt1, pt2) ->
-      Printf.sprintf "%s %s %s"
+      Printf.sprintf "(%s %s %s)"
         (exp_to_string pt1)
         (binop_to_string op)
         (exp_to_string pt2)
