@@ -70,3 +70,32 @@ let rec map fn (t : 'a top) =
       let data' = fn data in
       let exp' = exp_map fn exp in
       Expression (exp', data')
+
+let rec lit_to_string l = match l with
+  | Boolean b -> string_of_bool b
+  | Integer i -> string_of_int i
+  | Tuple es ->
+    Printf.sprintf "(%s)"
+      (String.concat ", " (List.map exp_to_string es))
+
+and exp_to_string e = match e with
+  | Variable (id, _) -> id
+  | Literal (l, _) -> lit_to_string l
+  | Application (exp1, exp2, _) ->
+    Printf.sprintf "%s(%s)"
+      (exp_to_string exp1)
+      (exp_to_string exp2);
+  | Binding (binds, exp, _) ->
+    let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
+    Printf.sprintf "let %s in %s"
+      (String.concat "; " (List.map fn binds))
+      (exp_to_string exp)
+
+let top_to_string t = match t with
+  | VariableDecl (id, exp, _) ->
+    Printf.sprintf "%s = %s\n" id (exp_to_string exp);
+  | FunctionDecl (id, args, body, _) ->
+    Printf.sprintf "%s(%s) = %s\n"
+      id (String.concat ", " args) (exp_to_string body);
+  | Expression (exp, _) ->
+    exp_to_string exp

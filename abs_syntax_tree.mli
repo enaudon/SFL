@@ -42,3 +42,7 @@ val top_data : 'a top -> 'a
     been replaced with the result of applying [fn] to [d].
  *)
 val map : ('a -> 'b) -> 'a top -> 'b top
+
+val lit_to_string : 'a literal -> string
+val exp_to_string : 'a exp -> string
+val top_to_string : 'a top -> string

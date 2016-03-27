@@ -67,7 +67,7 @@ and top_to_string tt = match tt with
       (Unify.term_to_string tm)
 
 let constraint_to_string (tm1, tm2) =
-    Printf.sprintf "%s = %s\n%!"
+    Printf.sprintf "%s = %s"
       (Unify.term_to_string tm1)
       (Unify.term_to_string tm2)
 (* ---- *)
@@ -107,45 +107,59 @@ let typo_of_term (t : Unify.term) : TT.typo =
   in
   fn t
 
-let constrain_exp
+let rec constrain_lit
   (c : (Unify.term * Unify.term) list)
-  (e : Unify.term AST.exp)
+  (l : Unify.term AST.literal)
   : (Unify.term * Unify.term) list
 =
-  let rec fn c e = match e with
-    | [] -> c
-    | AST.Variable (_) :: es -> fn c es
-    | AST.Literal (_) :: es -> fn c es
-    | AST.Application (exp1, exp2, tp) :: es ->
-      let exp1_tp = AST.exp_data exp1 in
-      let exp2_tp = AST.exp_data exp2 in
-      let terms = Array.of_list [exp2_tp; tp] in
-      let c' = (exp1_tp, Unify.funktion (function_id, terms)) :: c in
-      let e' = exp2 :: exp1 :: es in
-      fn c' e'
-(*
-    | AST.Abstraction (_, exp, _) :: es ->
-      let e' = (exp :: es) in
-      fn c e'
-*)
-    | AST.Binding (binds, exp, _) :: es ->
-      let bind_fn (_, e) es = e :: es in
-      let es' = List.fold_right bind_fn binds es in
-      let e' = exp :: es' in
-      fn c e'
-  in
-  fn c [e]
+  match l with
+  | AST.Boolean _ -> c
+  | AST.Integer _ -> c
+  | AST.Tuple es -> constrain_exp c es
 
-let constrain_top (t : Unify.term AST.top) : (Unify.term * Unify.term) list =
+and constrain_exp
+  (c : (Unify.term * Unify.term) list)
+  (e : Unify.term AST.exp list)
+  : (Unify.term * Unify.term) list
+=
+  match e with
+  | [] -> c
+  | AST.Variable _ :: es ->
+    constrain_exp c es
+  | AST.Literal (l, _) :: es ->
+    let c' = constrain_lit c l in
+    constrain_exp c' es
+  | AST.Application (exp1, exp2, tp) :: es ->
+    let exp1_tp = AST.exp_data exp1 in
+    let exp2_tp = AST.exp_data exp2 in
+    let terms = Array.of_list [exp2_tp; tp] in
+    let c' = (exp1_tp, Unify.funktion (function_id, terms)) :: c in
+    let e' = exp2 :: exp1 :: es in
+    constrain_exp c' e'
+(*
+  | AST.Abstraction (_, exp, _) :: es ->
+    let e' = (exp :: es) in
+    constrain_exp c e'
+*)
+  | AST.Binding (binds, exp, _) :: es ->
+    let bind_fn (_, e) es = e :: es in
+    let es' = List.fold_right bind_fn binds es in
+    let e' = exp :: es' in
+    constrain_exp c e'
+
+let constrain_top
+  (t : Unify.term AST.top)
+  : (Unify.term * Unify.term) list
+=
   let rec fn c t = match t with
     | [] -> c
     | AST.VariableDecl (_) :: es ->
       fn c es
     | AST.FunctionDecl (_, _, body, _) :: es ->
-      let c' = constrain_exp c body in
+      let c' = constrain_exp c [body] in
       fn c' es
     | AST.Expression (exp, _) :: es ->
-      let c' = constrain_exp c exp in
+      let c' = constrain_exp c [exp] in
       fn c' es
   in
   let c0 = [] in
