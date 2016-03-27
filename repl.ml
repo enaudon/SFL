@@ -17,13 +17,9 @@ let rec repl () =
   try
     let pt = parse input in
     Printf.printf ">> Parse Tree:\n%s\n" (PT.top_to_string pt);
-    match pt with
-      | PT.Expression pt ->
-        let tt = Infer.infer pt in
-        Printf.printf "%s\n" (TT.typo_to_string (TT.to_typo tt));
-        repl ()
-      | _ ->
-        Printf.printf "Top inference not implemented\n"; repl ()
+    let tt = Infer.infer pt in
+    Printf.printf "%s\n" (TT.typo_to_string (TT.to_typo tt));
+    repl ()
   with
     | Failure msg -> print_endline msg; repl ()
     | Parsing.Parse_error -> repl ()

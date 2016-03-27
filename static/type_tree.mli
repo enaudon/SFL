@@ -48,8 +48,10 @@ type typo =
   | Product of typo list
   | Disjunction of typo list
 
-(** The type of type trees. *)
-type t = typo Abs_syntax_tree.exp
+(** The type of type tree expressions. *)
+type exp = typo Abs_syntax_tree.exp
+
+type t = typo Abs_syntax_tree.top
 
 
 (** {2 Functions} *)
@@ -61,4 +63,4 @@ val to_typo : t -> typo
 val typo_to_string : typo -> string
 
 (** Returns the string representation of a type tree. *)
-val to_string : t -> string
+val exp_to_string : exp -> string

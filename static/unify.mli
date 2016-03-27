@@ -2,7 +2,7 @@
 
 
 module Identifier : sig
-  type t
+  type t = int
 
   val reset : unit -> unit
   val fresh : unit -> t

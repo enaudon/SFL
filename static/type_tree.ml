@@ -46,9 +46,11 @@ type typo =
   | Product of typo list
   | Disjunction of typo list
 
-type t = typo AST.exp
+type exp = typo Abs_syntax_tree.exp
 
-let to_typo tt = AST.data tt
+type t = typo Abs_syntax_tree.top
+
+let to_typo tt = AST.top_data tt
 
 let rec typo_to_string tp = match tp with
   | Boolean ->
@@ -73,20 +75,20 @@ let rec literal_to_string l = match l with
   | AST.Integer i -> string_of_int i
   | AST.Tuple es ->
     Printf.sprintf "(%s)"
-      (String.concat ", " (List.map to_string es))
+      (String.concat ", " (List.map exp_to_string es))
 
-and to_string tt = match tt with
+and exp_to_string tt = match tt with
   | AST.Variable (id, tp) ->
     Printf.sprintf "%s : %s" id (typo_to_string tp)
   | AST.Literal (l, tp) ->
     Printf.sprintf "%s : %s" (literal_to_string l) (typo_to_string tp)
   | AST.Application (e1, e2, tp) ->
     Printf.sprintf "((%s %s) : %s)"
-      (to_string e1)
-      (to_string e2)
+      (exp_to_string e1)
+      (exp_to_string e2)
       (typo_to_string tp)
   | AST.Binding (binds, e, _) ->
-    let fn (id, e) = Printf.sprintf "%s = %s" id (to_string e) in
+    let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
     Printf.sprintf "let %s in %s"
       (String.concat "; " (List.map fn binds))
-      (to_string e)
+      (exp_to_string e)
