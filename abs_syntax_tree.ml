@@ -84,7 +84,7 @@ and exp_to_string e = match e with
   | Application (exp1, exp2, _) ->
     Printf.sprintf "%s(%s)"
       (exp_to_string exp1)
-      (exp_to_string exp2);
+      (exp_to_string exp2)
   | Binding (binds, exp, _) ->
     let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
     Printf.sprintf "let %s in %s"
@@ -93,9 +93,9 @@ and exp_to_string e = match e with
 
 let top_to_string t = match t with
   | VariableDecl (id, exp, _) ->
-    Printf.sprintf "%s = %s\n" id (exp_to_string exp);
+    Printf.sprintf "%s = %s\n" id (exp_to_string exp)
   | FunctionDecl (id, args, body, _) ->
     Printf.sprintf "%s(%s) = %s\n"
-      id (String.concat ", " args) (exp_to_string body);
+      id (String.concat ", " args) (exp_to_string body)
   | Expression (exp, _) ->
-    exp_to_string exp
+    Printf.sprintf "%s\n" (exp_to_string exp)

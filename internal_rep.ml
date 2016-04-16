@@ -113,4 +113,5 @@ let top_to_string top = match top with
       id
       (String.concat ", " args)
       (exp_to_string body)
-  | Expression (exp) -> exp_to_string exp
+  | Expression (exp) ->
+    Printf.sprintf "%s\n" (exp_to_string exp)

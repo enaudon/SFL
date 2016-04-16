@@ -51,16 +51,20 @@ type typo =
 (** The type of type tree expressions. *)
 type exp = typo Abs_syntax_tree.exp
 
-type t = typo Abs_syntax_tree.top
+(** The type of type trees. *)
+type top = typo Abs_syntax_tree.top
 
 
 (** {2 Functions} *)
 
 (** Returns the type of a type tree *)
-val to_typo : t -> typo
+val to_typo : top -> typo
 
-(** Returns the string representation of a type. *)
+(** Returns the string representation of a type tree type. *)
 val typo_to_string : typo -> string
 
-(** Returns the string representation of a type tree. *)
+(** Returns the string representation of a type tree expression. *)
 val exp_to_string : exp -> string
+
+(** Returns the string representation of a type tree. *)
+val top_to_string : top -> string

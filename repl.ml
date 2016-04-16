@@ -4,6 +4,7 @@
 
 
 module PT = Parse_tree
+module AST = Abs_syntax_tree
 module TT = Type_tree
 module IR = Internal_rep
 
@@ -19,6 +20,7 @@ let rec repl () =
     let pt = parse input in
     Printf.printf ">> Parse Tree: %s" (PT.top_to_string pt);
     let tt = Infer.infer pt in
+    Printf.printf ">> Abs Syntax Tree: %s" (AST.top_to_string tt);
     Printf.printf ">> Type: %s\n" (TT.typo_to_string (TT.to_typo tt));
     let ir = IR.top_of_tt tt in
     Printf.printf ">> IR: %s" (IR.top_to_string ir);

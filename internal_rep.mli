@@ -24,7 +24,7 @@ type top =
   | Expression of exp
 
 val exp_of_tt : Type_tree.exp -> exp
-val top_of_tt : Type_tree.t -> top
+val top_of_tt : Type_tree.top -> top
 
 val lit_to_string : lit -> string
 val exp_to_string : exp -> string
