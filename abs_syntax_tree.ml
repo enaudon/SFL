@@ -5,14 +5,14 @@
 
 type id = string
 
-type 'a literal =
+type 'a lit =
   | Boolean of bool
   | Integer of int
   | Tuple of 'a exp list
 
 and 'a exp =
   | Variable of id * 'a
-  | Literal of 'a literal * 'a
+  | Literal of 'a lit * 'a
   | Application of 'a exp * 'a exp * 'a
   | Binding of (id * 'a exp) list * 'a exp * 'a
 

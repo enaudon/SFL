@@ -29,7 +29,7 @@ let rec term_to_string (t : Unify.term) : string = match t with
     end
   | _ -> Unify.term_to_string t
 
-let rec literal_to_string (l : 'a AST.literal) : string = match l with
+let rec lit_to_string (l : 'a AST.lit) : string = match l with
   | AST.Boolean b -> string_of_bool b
   | AST.Integer i -> string_of_int i
   | AST.Tuple es ->
@@ -40,7 +40,7 @@ and exp_to_string tt = match tt with
   | AST.Variable (id, tp) ->
     Printf.sprintf "%s : %s" id (term_to_string tp)
   | AST.Literal (l, tp) ->
-    Printf.sprintf "%s : %s" (literal_to_string l) (term_to_string tp)
+    Printf.sprintf "%s : %s" (lit_to_string l) (term_to_string tp)
   | AST.Application (e1, e2, tp) ->
     Printf.sprintf "((%s %s) : %s)"
       (exp_to_string e1)
@@ -109,7 +109,7 @@ let typo_of_term (t : Unify.term) : TT.typo =
 
 let rec constrain_lit
   (c : (Unify.term * Unify.term) list)
-  (l : Unify.term AST.literal)
+  (l : Unify.term AST.lit)
   : (Unify.term * Unify.term) list
 =
   match l with
@@ -168,7 +168,7 @@ let constrain_top
 
 let rec annotate_literal
   (env : Unify.term StrMap.t)
-  (l : PT.literal)
+  (l : PT.lit)
   : Unify.term AST.exp
 = match l with
   | PT.Boolean b ->

@@ -21,7 +21,7 @@ type binop =
   | Modulo
 
 (** The type of literal values. *)
-type literal =
+type lit =
   | Boolean of bool
   | Integer of int
   | Tuple of exp list
@@ -29,7 +29,7 @@ type literal =
 (** The type of parse tree expressions. *)
 and exp =
   | Variable of id
-  | Literal of literal
+  | Literal of lit
   | BinaryOperation of binop * exp * exp
   | Application of exp * exp
   | Binding of (id * exp) list * exp

@@ -10,7 +10,7 @@
 type id = string
 
 (** The type of literal values. *)
-type 'a literal =
+type 'a lit =
   | Boolean of bool
   | Integer of int
   | Tuple of 'a exp list
@@ -20,7 +20,7 @@ type 'a literal =
  *)
 and 'a exp =
   | Variable of id * 'a
-  | Literal of 'a literal * 'a
+  | Literal of 'a lit * 'a
   | Application of 'a exp * 'a exp * 'a
   | Binding of (id * 'a exp) list * 'a exp * 'a
 
@@ -43,6 +43,6 @@ val top_data : 'a top -> 'a
  *)
 val map : ('a -> 'b) -> 'a top -> 'b top
 
-val lit_to_string : 'a literal -> string
+val lit_to_string : 'a lit -> string
 val exp_to_string : 'a exp -> string
 val top_to_string : 'a top -> string

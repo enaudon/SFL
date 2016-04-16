@@ -11,14 +11,14 @@ type binop =
   | Division
   | Modulo
 
-type literal =
+type lit =
   | Boolean of bool
   | Integer of int
   | Tuple of exp list
 
 and exp =
   | Variable of id
-  | Literal of literal
+  | Literal of lit
   | BinaryOperation of binop * exp * exp
   | Application of exp * exp
   | Binding of (id * exp) list * exp
@@ -34,7 +34,7 @@ let binop_to_string op = match op with
   | Division -> "/"
   | Modulo -> "%"
 
-let rec literal_to_string (l : literal) : string = match l with
+let rec lit_to_string (l : lit) : string = match l with
   | Boolean b -> string_of_bool b
   | Integer i -> string_of_int i
   | Tuple es ->
@@ -45,12 +45,12 @@ and exp_to_string pt =
   (* Returns the parenthesized string representation of a parse tree *)
   let paren pt = match pt with
     | Variable x -> x
-    | Literal l -> literal_to_string l
+    | Literal l -> lit_to_string l
     | _ -> Printf.sprintf "(%s)" (exp_to_string pt)
   in
   match pt with
     | Variable x -> x
-    | Literal l -> literal_to_string l
+    | Literal l -> lit_to_string l
     | BinaryOperation (op, pt1, pt2) ->
       Printf.sprintf "(%s %s %s)"
         (exp_to_string pt1)
