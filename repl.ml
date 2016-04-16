@@ -5,6 +5,7 @@
 
 module PT = Parse_tree
 module TT = Type_tree
+module IR = Internal_rep
 
 
 let parse s =
@@ -19,6 +20,8 @@ let rec repl () =
     Printf.printf ">> Parse Tree: %s" (PT.top_to_string pt);
     let tt = Infer.infer pt in
     Printf.printf ">> Type: %s\n" (TT.typo_to_string (TT.to_typo tt));
+    let ir = IR.top_of_tt tt in
+    Printf.printf ">> IR: %s" (IR.top_to_string ir);
     repl ()
   with
     | Failure msg ->  Printf.printf "%s\n" msg; repl ()
