@@ -242,7 +242,7 @@ and annotate_expression
       in
       let env', binds' = List.fold_left bind_fn (env, []) binds in
       let exp' = annotate_expression env' exp in
-      AST.Binding (binds', exp', AST.exp_data exp')
+      AST.Binding (List.rev binds', exp', AST.exp_data exp')
 
 let annotate_top
   (env : Unify.term StrMap.t)
