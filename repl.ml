@@ -7,6 +7,7 @@ module PT = Parse_tree
 module AST = Abs_syntax_tree
 module TT = Type_tree
 module IR = Internal_rep
+module LL = Llvm_trans
 
 
 let parse s =
