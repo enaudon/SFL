@@ -38,9 +38,8 @@ let rec exp_to_llvalue env ast = match ast with
       with Not_found ->
         failwith "LlvmTrans.exp_to_llvalue: unknown variable"
     end
-(*
-  | Application of id * exp
-*)
+  | IR.Application _ ->
+    failwith "LlvmTrans.exp_to_llvalue: application?"
   | IR.Binding (binds, exp) ->
     let bind_fn env (id, e) =
       let llval = exp_to_llvalue env e in

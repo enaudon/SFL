@@ -51,11 +51,11 @@ module Substitution = struct
       | Variable (jd) when id = jd -> acc
       | t' -> IdMap.add id t' acc
     in
-    let filter_fn id t =
+    let filter_fn id _ =
       try let _ = IdMap.find id s1 in false
       with Not_found -> true
     in
-    let merge_fn id t1 t2 = match t1, t2 with
+    let merge_fn _ t1 t2 = match t1, t2 with
       | None, None -> failwith "Map.Make.merge bug"
       | None, Some t
       | Some t, None -> Some t
@@ -105,10 +105,10 @@ let unify e =
             else
               let s' = S.compose s (S.singleton id1 t) in
               fn s' es
-        | (Variable (id) as v), (Function (_) as t)
-        | (Function (_) as t), (Variable (id) as v)
-        | (Variable (id) as v), (Disjunction (_) as t)
-        | (Disjunction (_) as t), (Variable (id) as v) ->
+        | Variable (id), (Function (_) as t)
+        | (Function (_) as t), Variable (id)
+        | Variable (id), (Disjunction (_) as t)
+        | (Disjunction (_) as t), Variable (id) ->
           if (* occurs v t *) false
             then failwith "Circularity"
             else

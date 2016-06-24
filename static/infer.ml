@@ -19,13 +19,13 @@ let rec term_to_string (t : Unify.term) : string = match t with
   | Unify.Function (id, tms) ->
     let tms_strs = Array.to_list (Array.map term_to_string tms) in
     begin match id with
-      | id when id = boolean_id -> "bool"
-      | id when id = integer_id -> "int"
-      | id when id = tuple_id ->
+      | _ when id = boolean_id -> "bool"
+      | _ when id = integer_id -> "int"
+      | _ when id = tuple_id ->
         Printf.sprintf "(%s)" (String.concat "," tms_strs)
-      | id when id = function_id ->
+      | _ when id = function_id ->
         Printf.sprintf "%s" (String.concat "->" tms_strs)
-      | id -> Unify.term_to_string t
+      | _ -> Unify.term_to_string t
     end
   | _ -> Unify.term_to_string t
 
@@ -57,7 +57,7 @@ and top_to_string tt = match tt with
     Printf.sprintf "(%s = %s) : %s" id
       (exp_to_string exp)
       (Unify.term_to_string tm)
-  | AST.FunctionDecl (id, args, body, tm) ->
+  | AST.FunctionDecl (id, _, body, tm) ->
     Printf.sprintf "(%s(args) = %s) : %s" id
       (exp_to_string body)
       (Unify.term_to_string tm)
@@ -252,7 +252,6 @@ let annotate_top
   | PT.Declaration (PT.Variable id, exp) ->
     let exp' = annotate_expression env exp in
     let tp = AST.exp_data exp' in
-    let env' = StrMap.add id tp env in
     AST.VariableDecl (id, exp', tp)
   | PT.Declaration (PT.Application (PT.Variable id, PT.Variable arg), exp) ->
     let tm = Unify.variable (Unify.Identifier.fresh ()) in

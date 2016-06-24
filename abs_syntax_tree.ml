@@ -32,7 +32,7 @@ let top_data e = match e with
   | FunctionDecl (_, _, _, data) -> data
   | Expression (_, data) -> data
 
-let rec map fn (t : 'a top) =
+let map fn (t : 'a top) =
   let rec exp_map fn e = match e with
     | Variable (id, data) ->
       let data' = fn data in

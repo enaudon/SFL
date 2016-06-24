@@ -61,7 +61,7 @@ and exp_of_tt tt = match tt with
     Binding (binds', exp')
 
 let top_of_tt tt =
-  let fn env tt = match tt with
+  let fn tt = match tt with
     | AST.VariableDecl (id, exp, _) ->
       let exp' = exp_of_tt exp in
       VariableDecl (id, exp')
@@ -72,7 +72,7 @@ let top_of_tt tt =
       let exp' = exp_of_tt exp in
       Expression exp'
   in
-  fn (StrMap.empty) tt
+  fn tt
 
 let lit_to_string l = match l with
   | Boolean b -> string_of_bool b
