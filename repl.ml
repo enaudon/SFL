@@ -25,6 +25,8 @@ let rec repl () =
     Printf.printf ">> Type: %s\n" (TT.typo_to_string (TT.to_typo tt));
     let ir = IR.top_of_tt tt in
     Printf.printf ">> IR: %s" (IR.top_to_string ir);
+    let ll = LL.translate ir in
+    Printf.printf ">> LLVM:\n%s" (Llvm.string_of_llmodule ll);
     repl ()
   with
     | Failure msg ->  Printf.printf "%s\n" msg; repl ()

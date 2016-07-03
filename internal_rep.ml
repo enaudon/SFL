@@ -23,7 +23,7 @@ type exp =
 
 type top =
   | VariableDecl of id * exp
-  | FunctionDecl of id * id list * exp
+  | FunctionDecl of id * id list * exp * Type_tree.typo
   | Expression of exp
 
 let lit_of_tt l = match l with
@@ -65,9 +65,9 @@ let top_of_tt tt =
     | AST.VariableDecl (id, exp, _) ->
       let exp' = exp_of_tt exp in
       VariableDecl (id, exp')
-    | AST.FunctionDecl (id, args, body, _) ->
+    | AST.FunctionDecl (id, args, body, tp) ->
       let body' = exp_of_tt body in
-      FunctionDecl (id, args, body')
+      FunctionDecl (id, args, body', tp)
     | AST.Expression (exp, _) ->
       let exp' = exp_of_tt exp in
       Expression exp'
@@ -108,7 +108,7 @@ let top_to_string top = match top with
     Printf.sprintf "%s = %s\n"
       id
       (exp_to_string exp)
-  | FunctionDecl (id, args, body) ->
+  | FunctionDecl (id, args, body, _) ->
     Printf.sprintf "%s(%s) = %s\n"
       id
       (String.concat ", " args)

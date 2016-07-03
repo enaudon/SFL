@@ -1,2 +1,1 @@
-
-val translate : Internal_rep.exp -> Llvm.llmodule
+val translate : Internal_rep.top -> Llvm.llmodule

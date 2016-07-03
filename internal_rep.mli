@@ -20,7 +20,7 @@ type exp =
 
 type top =
   | VariableDecl of id * exp
-  | FunctionDecl of id * id list * exp
+  | FunctionDecl of id * id list * exp * Type_tree.typo
   | Expression of exp
 
 val exp_of_tt : Type_tree.exp -> exp
