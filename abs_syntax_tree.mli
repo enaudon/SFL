@@ -22,6 +22,7 @@ and 'a exp =
   | Variable of id * 'a
   | Literal of 'a lit * 'a
   | Application of 'a exp * 'a exp * 'a
+  | Abstraction of id * 'a exp * 'a
   | Binding of (id * 'a exp) list * 'a exp * 'a
 
 type 'a top =

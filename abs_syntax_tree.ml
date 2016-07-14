@@ -14,6 +14,7 @@ and 'a exp =
   | Variable of id * 'a
   | Literal of 'a lit * 'a
   | Application of 'a exp * 'a exp * 'a
+  | Abstraction of id * 'a exp * 'a
   | Binding of (id * 'a exp) list * 'a exp * 'a
 
 type 'a top =
@@ -25,6 +26,7 @@ let exp_data e = match e with
   | Variable (_, data) -> data
   | Literal (_, data) -> data
   | Application (_, _, data) -> data
+  | Abstraction (_, _, data) -> data
   | Binding (_, _, data) -> data
 
 let top_data e = match e with
@@ -51,6 +53,10 @@ let map fn (t : 'a top) =
       let exp1' = exp_map fn exp1 in
       let exp2' = exp_map fn exp2 in
       Application (exp1', exp2', data')
+    | Abstraction (arg, body, data) ->
+      let data' = fn data in
+      let body' = exp_map fn body in
+      Abstraction (arg, body', data')
     | Binding (binds, exp, data) ->
       let data' = fn data in
       let binds' = List.map (fun (id, e) -> id, exp_map fn e) binds in
@@ -85,6 +91,8 @@ and exp_to_string e = match e with
     Printf.sprintf "%s(%s)"
       (exp_to_string exp1)
       (exp_to_string exp2)
+  | Abstraction (arg, body, _) ->
+    Printf.sprintf "(%s -> %s)" arg (exp_to_string body)
   | Binding (binds, exp, _) ->
     let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
     Printf.sprintf "let %s in %s"

@@ -27,9 +27,11 @@ let error msg nterm =
 
 %nonassoc LET
 %nonassoc LITERAL
+%nonassoc VAR BOOLEAN INTEGER
 %nonassoc LPAREN RPAREN
 %left PLUS MINUS
 %left ASTERIK FSLASH PERCENT
+%nonassoc APP ABS
 
 %start top
 %start top_list
@@ -67,7 +69,8 @@ exp:
     { PT.BinaryOperation (PT.Multiplication, PT.Literal $1, $2) }
   | exp FSLASH exp    { PT.BinaryOperation (PT.Division, $1, $3) }
   | exp PERCENT exp   { PT.BinaryOperation (PT.Modulo, $1, $3) }
-  | exp LPAREN exp RPAREN               { PT.Application ($1, $3) }
+  | exp exp %prec APP       { PT.Application ($1, $2) }
+  | VAR IMP exp %prec ABS   { PT.Abstraction ($1, $3) }
   | LET binding_list IN exp %prec LET   { PT.Binding (List.rev $2, $4) }
   | LPAREN exp RPAREN                   { $2 }
 ;

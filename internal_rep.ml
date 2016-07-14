@@ -54,6 +54,8 @@ and exp_of_tt tt = match tt with
   | AST.Application (exp1, exp2, _) ->
     let op, lhs, rhs = binop_of_tt_abs (exp1, exp2) in
     BinaryOperation (op, lhs, rhs)
+  | AST.Abstraction (_, _, _) ->
+    failwith "AST.Application to IR not implemented"
   | AST.Binding (binds, exp, _) ->
     let bind_fn (id, e) = (id, (exp_of_tt e)) in
     let binds' = List.map bind_fn binds in

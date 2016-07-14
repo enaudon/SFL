@@ -87,6 +87,11 @@ and exp_to_string tt = match tt with
       (exp_to_string e1)
       (exp_to_string e2)
       (typo_to_string tp)
+  | AST.Abstraction (arg, body, tp) ->
+    Printf.sprintf "((%s -> %s) : %s)"
+      arg
+      (exp_to_string body)
+      (typo_to_string tp)
   | AST.Binding (binds, e, _) ->
     let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
     Printf.sprintf "let %s in %s"

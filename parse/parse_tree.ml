@@ -21,6 +21,7 @@ and exp =
   | Literal of lit
   | BinaryOperation of binop * exp * exp
   | Application of exp * exp
+  | Abstraction of id * exp
   | Binding of (id * exp) list * exp
 
 type top =
@@ -58,6 +59,8 @@ and exp_to_string pt =
         (exp_to_string pt2)
     | Application (pt1, pt2) ->
       Printf.sprintf "%s(%s)" (paren pt1) (exp_to_string pt2)
+    | Abstraction (arg, body) ->
+      Printf.sprintf "(%s -> %s)" arg (exp_to_string body)
     | Binding (binds, pt) ->
       let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
       Printf.sprintf "let %s in %s"

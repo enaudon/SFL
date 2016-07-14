@@ -46,6 +46,11 @@ and exp_to_string tt = match tt with
       (exp_to_string e1)
       (exp_to_string e2)
       (Unify.term_to_string tp)
+  | AST.Abstraction (arg, body, tp) ->
+    Printf.sprintf "((%s -> %s) : %s)"
+      arg
+      (exp_to_string body)
+      (Unify.term_to_string tp)
   | AST.Binding (binds, e, _) ->
     let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
     Printf.sprintf "let %s in %s"
@@ -136,11 +141,9 @@ and constrain_exp
     let c' = (exp1_tp, Unify.funktion (function_id, terms)) :: c in
     let e' = exp2 :: exp1 :: es in
     constrain_exp c' e'
-(*
-  | AST.Abstraction (_, exp, _) :: es ->
-    let e' = (exp :: es) in
+  | AST.Abstraction (_, body, _) :: es ->
+    let e' = (body :: es) in
     constrain_exp c e'
-*)
   | AST.Binding (binds, exp, _) :: es ->
     let bind_fn (_, e) es = e :: es in
     let es' = List.fold_right bind_fn binds es in
@@ -227,14 +230,12 @@ and annotate_expression
       let exp1' = annotate_expression env exp1 in
       let exp2' = annotate_expression env exp2 in
       AST.Application (exp1', exp2', tm)
-(*
-    | PT.Abstraction (id, exp) ->
+    | PT.Abstraction (arg, body) ->
       let tm = Unify.variable (Unify.Identifier.fresh ()) in
-      let env' = env_add env id tm in
-      let exp' = fn env' exp in
-      let terms = Array.of_list [tm; AST.exp_data exp'] in
-      AST.Abstraction (id, exp', Unify.funktion (function_id, terms))
-*)
+      let env' = StrMap.add arg tm env in
+      let body' = annotate_expression env' body in
+      let terms = Array.of_list [tm; AST.exp_data body'] in
+      AST.Abstraction (arg, body', Unify.funktion (function_id, terms))
     | PT.Binding (binds, exp) ->
       let bind_fn (env, binds) (id, exp) = 
         let exp' = annotate_expression env exp in
