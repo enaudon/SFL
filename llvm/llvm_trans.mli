@@ -1,1 +1,1 @@
-val translate : Internal_rep.top -> Llvm.llmodule
+val translate : Internal_rep.top list -> Llvm.llmodule

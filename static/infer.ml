@@ -6,7 +6,9 @@
 module PT = Parse_tree
 module TT = Type_tree
 module AST = Abs_syntax_tree
-module StrMap = Map.Make (String)
+
+module type ENV = Map.S with type key = string
+module Env = Map.Make (String)
 
 
 let boolean_id = Unify.Identifier.fresh ()
@@ -81,14 +83,14 @@ let typo_of_term (t : Unify.term) : TT.typo =
   let env =  Hashtbl.create 16 in
   let rec fn t = match t with
     | Unify.Variable (id) ->
-      let tv = begin
+      let tv =
         try
           Hashtbl.find env id
         with Not_found ->
           let tv = TT.TypeVariable.create "Type" in
           Hashtbl.replace env id tv;
           tv
-      end in
+      in
       TT.Variable (tv)
     | Unify.Function (id, terms) ->
       begin match id with
@@ -170,7 +172,7 @@ let constrain_top
   fn c0 t0
 
 let rec annotate_literal
-  (env : Unify.term StrMap.t)
+  (env : Unify.term Env.t)
   (l : PT.lit)
   : Unify.term AST.exp
 = match l with
@@ -187,7 +189,7 @@ let rec annotate_literal
 
 
 and annotate_expression
-  (env : Unify.term StrMap.t)
+  (env : Unify.term Env.t)
   (e : PT.exp)
   : Unify.term AST.exp
 =
@@ -195,7 +197,7 @@ and annotate_expression
   let env_add env id tm =
     let tm' = 
       try
-        match StrMap.find id env with
+        match Env.find id env with
           | Unify.Disjunction tms ->
             Unify.Disjunction (tm :: tms)
           | old_tm when old_tm <> tm ->
@@ -205,14 +207,14 @@ and annotate_expression
       with Not_found ->
         tm
     in
-    StrMap.add id tm' env
+    Env.add id tm' env
   in
 *)
   match e with
     | PT.Variable (id) ->
       begin
         try
-          let tm = StrMap.find id env in
+          let tm = Env.find id env in
           AST.Variable (id, tm)
         with Not_found ->
           failwith (Printf.sprintf "Unbound variable %s" id)
@@ -232,41 +234,47 @@ and annotate_expression
       AST.Application (exp1', exp2', tm)
     | PT.Abstraction (arg, body) ->
       let tm = Unify.variable (Unify.Identifier.fresh ()) in
-      let env' = StrMap.add arg tm env in
+      let env' = Env.add arg tm env in
       let body' = annotate_expression env' body in
       let terms = Array.of_list [tm; AST.exp_data body'] in
       AST.Abstraction (arg, body', Unify.funktion (function_id, terms))
     | PT.Binding (binds, exp) ->
       let bind_fn (env, binds) (id, exp) = 
         let exp' = annotate_expression env exp in
-        StrMap.add id (AST.exp_data exp') env, (id, exp') :: binds
+        Env.add id (AST.exp_data exp') env, (id, exp') :: binds
       in
       let env', binds' = List.fold_left bind_fn (env, []) binds in
       let exp' = annotate_expression env' exp in
       AST.Binding (List.rev binds', exp', AST.exp_data exp')
 
-let annotate_top
-  (env : Unify.term StrMap.t)
-  (t : PT.top)
-  : Unify.term AST.top
-= match t with
-  | PT.Declaration (PT.Variable id, exp) ->
-    let exp' = annotate_expression env exp in
-    let tp = AST.exp_data exp' in
-    AST.VariableDecl (id, exp', tp)
-  | PT.Declaration (PT.Application (PT.Variable id, PT.Variable arg), exp) ->
-    let tm = Unify.variable (Unify.Identifier.fresh ()) in
-    let env' = StrMap.add arg tm env in
-    let exp' = annotate_expression env' exp in
-    let terms = Array.of_list [tm; AST.exp_data exp'] in
-    AST.FunctionDecl (id, [arg], exp', Unify.funktion (function_id, terms))
-  | PT.Declaration _ ->
-    failwith "Expected a variable of function declaration"
-  | PT.Expression exp ->
-    let exp' = annotate_expression env exp in
-    AST.Expression (exp', AST.exp_data exp')
+let rec annotate_top
+  (env : Unify.term Env.t)
+  (tops : PT.top list)
+  : Unify.term AST.top list
+= match tops with
+  | [] -> []
+  | hd :: tl -> match hd with
+    | PT.Declaration (PT.Variable id, exp) ->
+      let exp' = annotate_expression env exp in
+      let tm = AST.exp_data exp' in
+      let env' = Env.add id tm env in
+      AST.VariableDecl (id, exp', tm) :: annotate_top env' tl
+    | PT.Declaration (PT.Application (PT.Variable id, PT.Variable arg), exp) ->
+      let arg_tm = Unify.variable (Unify.Identifier.fresh ()) in
+      let exp' = annotate_expression (Env.add arg arg_tm env) exp in
+      let fun_tm = Unify.funktion (
+        function_id,
+        Array.of_list [arg_tm; AST.exp_data exp']
+      ) in
+      let env' = Env.add id fun_tm env in
+      AST.FunctionDecl (id, [arg], exp', fun_tm) :: annotate_top env' tl
+    | PT.Declaration _ ->
+      failwith "Expected a variable of function declaration"
+    | PT.Expression exp ->
+      let exp' = annotate_expression env exp in
+      AST.Expression (exp', AST.exp_data exp') :: annotate_top env tl
 
-let env0 =
+let empty_env =
   let tp = Array.of_list [
     Unify.Function (
       tuple_id,
@@ -278,14 +286,14 @@ let env0 =
     Unify.constant integer_id
   ] in
   List.fold_left
-    (fun acc id -> StrMap.add id (Unify.Function (function_id, tp)) acc) 
-    (StrMap.empty)
+    (fun acc id -> Env.add id (Unify.Function (function_id, tp)) acc) 
+    (Env.empty)
     ["+"; "-"; "*"; "/"; "%"]
 
 let infer e =
-  let tt = annotate_top env0 e in
-  let cs = constrain_top tt in
+  let tt = annotate_top empty_env e in
+  let cs = List.flatten (List.map constrain_top tt) in
   let s = Unify.unify (cs) in
-  let tt' = AST.map (Unify.Substitution.apply s) tt in
-  let tt'' = AST.map typo_of_term tt' in
+  let tt' = List.map (AST.map (Unify.Substitution.apply s)) tt in
+  let tt'' = List.map (AST.map typo_of_term) tt' in
   tt''

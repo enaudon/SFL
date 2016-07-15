@@ -67,8 +67,8 @@ let rec typo_to_llvm tp = match tp with
 let top_to_llvalue llmod env top = match top with
   | IR.VariableDecl (id, exp) ->
     let exp' = exp_to_llvalue env exp in
-    let llval = LL.define_global id exp' llmod in
-    llval
+    let var = LL.define_global id exp' llmod in
+    StrMap.add id var env
   | IR.FunctionDecl (id, args, body, tp) ->
     (* Declaration *)
     let tp' = typo_to_llvm tp in
@@ -91,7 +91,7 @@ let top_to_llvalue llmod env top = match top with
     (* Definition *)
     let llval = exp_to_llvalue env' body in
     let _ = LL.build_ret llval llbld in
-    fn
+    StrMap.add id fn env
   | IR.Expression exp ->
     let tp = LL.function_type int_type (Array.make 0 int_type) in
     let fn = LL.declare_function "repl_main" tp llmod in
@@ -99,10 +99,10 @@ let top_to_llvalue llmod env top = match top with
     LL.position_at_end bb0 llbld;
     let llval = exp_to_llvalue env exp in
     let _ = LL.build_ret llval llbld in
-    fn
+    env
 
 let translate ir =
   let llmod = LL.create_module llctx "repl" in
   let env0 = StrMap.empty in
-  let _ = top_to_llvalue llmod env0 ir in
+  let _ = List.fold_left (top_to_llvalue llmod) env0 ir in
   llmod

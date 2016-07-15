@@ -33,10 +33,7 @@ let error msg nterm =
 %left PLUS MINUS
 %left ASTERIK FSLASH PERCENT
 
-%start top
 %start top_list
-
-%type <Parse_tree.top> top
 %type <Parse_tree.top list> top_list
 
 %%
@@ -50,8 +47,8 @@ top:
     { failwith (error "expected declaration or expression" 1) }
 ;
 top_list:
-  | /* empty */       { [] }
-  | top_list EOL top  { $3 :: $1 }
+  | top                     { [$1] }
+  | top_list SEMICOLON top  { $3 :: $1 }
 ;
 
 literal:
