@@ -46,7 +46,7 @@ let rec binop_of_tt_abs (exp1, exp2) = match exp1, exp2 with
     let rhs' = exp_of_tt rhs in
     (op, lhs', rhs')
   | _ ->
-    failwith "AST.Application to IR not implemented"
+    failwith "IR.exp_of_tt: AST.Application to IR not implemented"
 
 and exp_of_tt tt = match tt with
   | AST.Variable (id, _) -> Variable id
@@ -55,7 +55,7 @@ and exp_of_tt tt = match tt with
     let op, lhs, rhs = binop_of_tt_abs (exp1, exp2) in
     BinaryOperation (op, lhs, rhs)
   | AST.Abstraction (_, _, _) ->
-    failwith "AST.Application to IR not implemented"
+    failwith "IR.exp_of_tt: AST.Abstraction to IR not implemented"
   | AST.Binding (binds, exp, _) ->
     let bind_fn (id, e) = (id, (exp_of_tt e)) in
     let binds' = List.map bind_fn binds in

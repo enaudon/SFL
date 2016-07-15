@@ -65,14 +65,15 @@ let rec typo_to_llvm tp = match tp with
   | TT.Disjunction _ -> failwith "TT.Disjunction not implemented"
 
 let top_to_llvalue llmod env top = match top with
-  | IR.VariableDecl _ ->
-    failwith "LlvmTrans.top_to_llvalue: VariableDecl unimplemented"
+  | IR.VariableDecl (id, exp) ->
+    let exp' = exp_to_llvalue env exp in
+    let llval = LL.define_global id exp' llmod in
+    llval
   | IR.FunctionDecl (id, args, body, tp) ->
     (* Declaration *)
     let tp' = typo_to_llvm tp in
-    let fn = LL.declare_function id tp' llmod in
-    let bb0 = LL.append_block llctx "entry" fn in
-    LL.position_at_end bb0 llbld;
+    let fn = LL.define_function id tp' llmod in
+    LL.position_at_end (LL.entry_block fn) llbld;
 
     (* Set up arguments *)
     let params = LL.params fn in
