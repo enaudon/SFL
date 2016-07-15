@@ -26,12 +26,12 @@ let error msg nterm =
 %token EOL EOF
 
 %nonassoc LET
+%nonassoc APP ABS
 %nonassoc LITERAL
 %nonassoc VAR BOOLEAN INTEGER
 %nonassoc LPAREN RPAREN
 %left PLUS MINUS
 %left ASTERIK FSLASH PERCENT
-%nonassoc APP ABS
 
 %start top
 %start top_list
