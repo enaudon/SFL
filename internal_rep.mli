@@ -15,7 +15,7 @@ type exp =
   | Literal of lit
   | Variable of id
   | BinaryOperation of binop * exp * exp
-  | Application of id * exp
+  | Application of id * exp list
   | Binding of (id * exp) list * exp
 
 type top =

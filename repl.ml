@@ -28,8 +28,8 @@ let rec repl () =
     Printf.printf ">> Type:\n%s\n"
       (String.concat "\n" (List.map TT.typo_to_string (List.map TT.to_typo tt)));
     let ir = List.map IR.top_of_tt tt in
-    Printf.printf ">> IR: %s"
-      (String.concat "" (List.map IR.top_to_string ir));
+    Printf.printf ">> IR:\n%s"
+      (String.concat "\n" (List.map IR.top_to_string ir));
     let ll = LL.translate ir in
     Printf.printf ">> LLVM:\n%s" (Llvm.string_of_llmodule ll);
     repl ()

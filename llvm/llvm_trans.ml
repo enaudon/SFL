@@ -3,6 +3,7 @@ module LL = Llvm
 module StrMap = Map.Make (String)
 
 let llctx = LL.global_context ()
+let llmod = LL.create_module llctx "repl"
 let llbld = LL.builder llctx
 
 let int_type = LL.i32_type llctx
@@ -42,8 +43,14 @@ let rec exp_to_llvalue env ast = match ast with
             id
         )
     end
-  | IR.Application _ ->
-    failwith "LlvmTrans.exp_to_llvalue: Application unimplemented"
+  | IR.Application (id, args) ->
+    let fn = match LL.lookup_function id llmod with
+      | Some fn -> fn
+      | None ->
+        failwith "LlvmTrans.exp_to_llvalue: IR.Application unknown function"
+    in
+    let args' = Array.of_list (List.map (exp_to_llvalue env) args) in
+    LL.build_call fn args' "call" llbld
   | IR.Binding (binds, exp) ->
     let bind_fn env (id, e) =
       let llval = exp_to_llvalue env e in
@@ -102,7 +109,6 @@ let top_to_llvalue llmod env top = match top with
     env
 
 let translate ir =
-  let llmod = LL.create_module llctx "repl" in
   let env0 = StrMap.empty in
   let _ = List.fold_left (top_to_llvalue llmod) env0 ir in
   llmod

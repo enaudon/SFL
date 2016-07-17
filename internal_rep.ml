@@ -18,7 +18,7 @@ type exp =
   | Literal of lit
   | Variable of id
   | BinaryOperation of binop * exp * exp
-  | Application of id * exp
+  | Application of id * exp list
   | Binding of (id * exp) list * exp
 
 type top =
@@ -46,14 +46,21 @@ let rec binop_of_tt_abs (exp1, exp2) = match exp1, exp2 with
     let rhs' = exp_of_tt rhs in
     (op, lhs', rhs')
   | _ ->
-    failwith "IR.exp_of_tt: AST.Application to IR not implemented"
+    failwith "IR.binop_of_tt_abs: AST.Application to IR not implemented"
 
 and exp_of_tt tt = match tt with
   | AST.Variable (id, _) -> Variable id
   | AST.Literal (l, _) -> Literal (lit_of_tt l)
   | AST.Application (exp1, exp2, _) ->
-    let op, lhs, rhs = binop_of_tt_abs (exp1, exp2) in
-    BinaryOperation (op, lhs, rhs)
+    begin try
+      let op, lhs, rhs = binop_of_tt_abs (exp1, exp2) in
+      BinaryOperation (op, lhs, rhs)
+    with _ -> match exp1 with
+      | AST.Variable (id, _) ->
+        let args = [ exp_of_tt exp2 ] in
+        Application(id, args)
+      | _ -> failwith "IR.exp_of_tt: AST.Application unrecognized function"
+    end
   | AST.Abstraction (_, _, _) ->
     failwith "IR.exp_of_tt: AST.Abstraction to IR not implemented"
   | AST.Binding (binds, exp, _) ->
@@ -95,10 +102,11 @@ let rec exp_to_string exp = match exp with
       (exp_to_string lhs)
       (binop_to_string op)
       (exp_to_string rhs)
-  | Application (id, exp) ->
-    Printf.sprintf "%s(%s)\n"
+  | Application (id, args) ->
+    let args' = List.map exp_to_string args in
+    Printf.sprintf "%s(%s)"
       id
-      (exp_to_string exp)
+      (String.concat ", " args')
   | Binding (binds, exp) ->
     let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
     Printf.sprintf "let %s in %s"
