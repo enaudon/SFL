@@ -53,10 +53,10 @@ and exp_to_string tt = match tt with
       arg
       (exp_to_string body)
       (Unify.term_to_string tp)
-  | AST.Binding (binds, e, _) ->
-    let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
-    Printf.sprintf "let %s in %s"
-      (String.concat "; " (List.map fn binds))
+  | AST.Binding (id, value, e, _) ->
+    Printf.sprintf "let %s = %s in %s"
+      id
+      (exp_to_string value)
       (exp_to_string e)
 
 and top_to_string tt = match tt with
@@ -146,11 +146,9 @@ and constrain_exp
   | AST.Abstraction (_, body, _) :: es ->
     let e' = (body :: es) in
     constrain_exp c e'
-  | AST.Binding (binds, exp, _) :: es ->
-    let bind_fn (_, e) es = e :: es in
-    let es' = List.fold_right bind_fn binds es in
-    let e' = exp :: es' in
-    constrain_exp c e'
+  | AST.Binding (_, value, exp, _) :: es ->
+    let es' = value :: exp :: es in
+    constrain_exp c es'
 
 let constrain_top
   (t : Unify.term AST.top)
@@ -239,13 +237,15 @@ and annotate_expression
       let terms = Array.of_list [tm; AST.exp_data body'] in
       AST.Abstraction (arg, body', Unify.funktion (function_id, terms))
     | PT.Binding (binds, exp) ->
-      let bind_fn (env, binds) (id, exp) = 
-        let exp' = annotate_expression env exp in
-        Env.add id (AST.exp_data exp') env, (id, exp') :: binds
+      let rec fn env binds = match binds with
+        | [] -> annotate_expression env exp
+        | (id, value) :: tl ->
+          let value' = annotate_expression env value in
+          let env' = Env.add id (AST.exp_data value') env in
+          let exp' = fn env' tl in
+          AST.Binding (id, value', exp', AST.exp_data exp')
       in
-      let env', binds' = List.fold_left bind_fn (env, []) binds in
-      let exp' = annotate_expression env' exp in
-      AST.Binding (List.rev binds', exp', AST.exp_data exp')
+      fn env binds
 
 let rec annotate_top
   (env : Unify.term Env.t)

@@ -92,10 +92,10 @@ and exp_to_string tt = match tt with
       arg
       (exp_to_string body)
       (typo_to_string tp)
-  | AST.Binding (binds, e, _) ->
-    let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
-    Printf.sprintf "let %s in %s"
-      (String.concat "; " (List.map fn binds))
+  | AST.Binding (id, value, e, _) ->
+    Printf.sprintf "let %s = %s in %s"
+      id
+      (exp_to_string value)
       (exp_to_string e)
 
 let top_to_string tt = match tt with

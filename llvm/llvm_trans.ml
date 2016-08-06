@@ -51,12 +51,9 @@ let rec exp_to_llvalue env ast = match ast with
     in
     let args' = Array.of_list (List.map (exp_to_llvalue env) args) in
     LL.build_call fn args' "call" llbld
-  | IR.Binding (binds, exp) ->
-    let bind_fn env (id, e) =
-      let llval = exp_to_llvalue env e in
-      StrMap.add id llval env
-    in
-    let env' = List.fold_left bind_fn env binds in
+  | IR.Binding (id, value, exp) ->
+    let llval = exp_to_llvalue env value in
+    let env' = StrMap.add id llval env in
     exp_to_llvalue env' exp
 
 module TT = Type_tree

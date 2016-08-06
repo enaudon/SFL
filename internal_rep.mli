@@ -16,7 +16,7 @@ type exp =
   | Variable of id
   | BinaryOperation of binop * exp * exp
   | Application of id * exp list
-  | Binding of (id * exp) list * exp
+  | Binding of id * exp * exp
 
 type top =
   | VariableDecl of id * exp

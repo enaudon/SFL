@@ -19,7 +19,7 @@ type exp =
   | Variable of id
   | BinaryOperation of binop * exp * exp
   | Application of id * exp list
-  | Binding of (id * exp) list * exp
+  | Binding of id * exp * exp
 
 type top =
   | VariableDecl of id * exp
@@ -63,11 +63,10 @@ and exp_of_tt tt = match tt with
     end
   | AST.Abstraction (_, _, _) ->
     failwith "IR.exp_of_tt: AST.Abstraction to IR not implemented"
-  | AST.Binding (binds, exp, _) ->
-    let bind_fn (id, e) = (id, (exp_of_tt e)) in
-    let binds' = List.map bind_fn binds in
+  | AST.Binding (id, value, exp, _) ->
+    let value' = exp_of_tt value in
     let exp' = exp_of_tt exp in
-    Binding (binds', exp')
+    Binding (id, value', exp')
 
 let top_of_tt tt =
   let fn tt = match tt with
@@ -107,10 +106,10 @@ let rec exp_to_string exp = match exp with
     Printf.sprintf "%s(%s)"
       id
       (String.concat ", " args')
-  | Binding (binds, exp) ->
-    let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
-    Printf.sprintf "let %s in %s"
-      (String.concat "; " (List.map fn binds))
+  | Binding (id, value, exp) ->
+    Printf.sprintf "let %s = %s in %s"
+      id
+      (exp_to_string value)
       (exp_to_string exp)
 
 let top_to_string top = match top with
