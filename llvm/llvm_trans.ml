@@ -39,7 +39,7 @@ let rec exp_to_llvalue env ast = match ast with
         StrMap.find id env
       with Not_found ->
         failwith (Printf.sprintf
-            "LlvmTrans.exp_to_llvalue: unknown variable %s"
+            "LlvmTrans.exp_to_llvalue: unknown variable \"%s\""
             id
         )
     end

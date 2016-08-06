@@ -17,65 +17,40 @@ and 'a exp =
   | Abstraction of id * 'a exp * 'a
   | Binding of id * 'a exp * 'a exp * 'a
 
-type 'a top =
-  | VariableDecl of id * 'a exp * 'a
-  | FunctionDecl of id * id list * 'a exp * 'a
-  | Expression of 'a exp * 'a
-
-let exp_data e = match e with
+let data e = match e with
   | Variable (_, data) -> data
   | Literal (_, data) -> data
   | Application (_, _, data) -> data
   | Abstraction (_, _, data) -> data
   | Binding (_, _, _, data) -> data
 
-let top_data e = match e with
-  | VariableDecl (_, _, data) -> data
-  | FunctionDecl (_, _, _, data) -> data
-  | Expression (_, data) -> data
-
-let map fn (t : 'a top) =
-  let rec exp_map fn e = match e with
-    | Variable (id, data) ->
-      let data' = fn data in
-      Variable (id, data')
-    | Literal (l, data) ->
-      let helper l = match l with
-        | Boolean b -> Boolean b
-        | Integer i -> Integer i
-        | Tuple es -> Tuple (List.map (exp_map fn) es)
-      in
-      let l' = helper l in
-      let data' = fn data in
-      Literal (l', data')
-    | Application (exp1, exp2, data) ->
-      let data' = fn data in
-      let exp1' = exp_map fn exp1 in
-      let exp2' = exp_map fn exp2 in
-      Application (exp1', exp2', data')
-    | Abstraction (arg, body, data) ->
-      let data' = fn data in
-      let body' = exp_map fn body in
-      Abstraction (arg, body', data')
-    | Binding (id, value, exp, data) ->
-      let data' = fn data in
-      let value' = exp_map fn value in
-      let exp' = exp_map fn exp in
-      Binding (id, value', exp', data')
-  in
-  match t with
-    | VariableDecl (id, exp, data) ->
-      let data' = fn data in
-      let exp' = exp_map fn exp in
-      VariableDecl (id, exp', data')
-    | FunctionDecl (id, args, body, data) ->
-      let data' = fn data in
-      let body' = exp_map fn body in
-      FunctionDecl (id, args, body', data')
-    | Expression (exp, data) ->
-      let data' = fn data in
-      let exp' = exp_map fn exp in
-      Expression (exp', data')
+let rec map fn e = match e with
+  | Variable (id, data) ->
+    let data' = fn data in
+    Variable (id, data')
+  | Literal (l, data) ->
+    let helper l = match l with
+      | Boolean b -> Boolean b
+      | Integer i -> Integer i
+      | Tuple es -> Tuple (List.map (map fn) es)
+    in
+    let l' = helper l in
+    let data' = fn data in
+    Literal (l', data')
+  | Application (exp1, exp2, data) ->
+    let data' = fn data in
+    let exp1' = map fn exp1 in
+    let exp2' = map fn exp2 in
+    Application (exp1', exp2', data')
+  | Abstraction (arg, body, data) ->
+    let data' = fn data in
+    let body' = map fn body in
+    Abstraction (arg, body', data')
+  | Binding (id, value, exp, data) ->
+    let data' = fn data in
+    let value' = map fn value in
+    let exp' = map fn exp in
+    Binding (id, value', exp', data')
 
 let rec lit_to_string l = match l with
   | Boolean b -> string_of_bool b
@@ -98,12 +73,3 @@ and exp_to_string e = match e with
       id
       (exp_to_string value)
       (exp_to_string exp)
-
-let top_to_string t = match t with
-  | VariableDecl (id, exp, _) ->
-    Printf.sprintf "%s = %s\n" id (exp_to_string exp)
-  | FunctionDecl (id, args, body, _) ->
-    Printf.sprintf "%s(%s) = %s\n"
-      id (String.concat ", " args) (exp_to_string body)
-  | Expression (exp, _) ->
-    Printf.sprintf "%s\n" (exp_to_string exp)

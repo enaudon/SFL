@@ -68,19 +68,14 @@ and exp_of_tt tt = match tt with
     let exp' = exp_of_tt exp in
     Binding (id, value', exp')
 
-let top_of_tt tt =
-  let fn tt = match tt with
-    | AST.VariableDecl (id, exp, _) ->
-      let exp' = exp_of_tt exp in
-      VariableDecl (id, exp')
-    | AST.FunctionDecl (id, args, body, tp) ->
-      let body' = exp_of_tt body in
-      FunctionDecl (id, args, body', tp)
-    | AST.Expression (exp, _) ->
-      let exp' = exp_of_tt exp in
-      Expression exp'
-  in
-  fn tt
+let top_of_tt tt = match tt with
+  | AST.Binding (id, AST.Abstraction (arg, body, tp), AST.Variable ("", _), _) ->
+    let body' = exp_of_tt body in
+    FunctionDecl (id, [arg], body', tp)
+  | AST.Binding (id, value, AST.Variable ("", _), _) ->
+    let value' = exp_of_tt value in
+    VariableDecl (id, value')
+  | _ -> Expression (exp_of_tt tt)
 
 let lit_to_string l = match l with
   | Boolean b -> string_of_bool b

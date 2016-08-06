@@ -25,25 +25,15 @@ and 'a exp =
   | Abstraction of id * 'a exp * 'a
   | Binding of id * 'a exp * 'a exp * 'a
 
-type 'a top =
-  | VariableDecl of id * 'a exp * 'a
-  | FunctionDecl of id * id list * 'a exp * 'a
-  | Expression of 'a exp * 'a
-
 (** Returns the data associated with an abstract syntax tree expression.
  *)
-val exp_data : 'a exp -> 'a
-
-(** Returns the data associated with an abstract syntax tree expression.
- *)
-val top_data : 'a top -> 'a
+val data : 'a exp -> 'a
 
 (** [map fn ast] returns a new abstract syntax tree with the same
     structure as [ast], but where the data, [d], at with each node has
     been replaced with the result of applying [fn] to [d].
  *)
-val map : ('a -> 'b) -> 'a top -> 'b top
+val map : ('a -> 'b) -> 'a exp -> 'b exp
 
 val lit_to_string : 'a lit -> string
 val exp_to_string : 'a exp -> string
-val top_to_string : 'a top -> string

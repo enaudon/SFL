@@ -59,20 +59,6 @@ and exp_to_string tt = match tt with
       (exp_to_string value)
       (exp_to_string e)
 
-and top_to_string tt = match tt with
-  | AST.VariableDecl (id, exp, tm) ->
-    Printf.sprintf "(%s = %s) : %s" id
-      (exp_to_string exp)
-      (Unify.term_to_string tm)
-  | AST.FunctionDecl (id, _, body, tm) ->
-    Printf.sprintf "(%s(args) = %s) : %s" id
-      (exp_to_string body)
-      (Unify.term_to_string tm)
-  | AST.Expression (exp, tm) ->
-    Printf.sprintf "%s : %s"
-      (exp_to_string exp)
-      (Unify.term_to_string tm)
-
 let constraint_to_string (tm1, tm2) =
     Printf.sprintf "%s = %s"
       (Unify.term_to_string tm1)
@@ -130,44 +116,27 @@ and constrain_exp
   : (Unify.term * Unify.term) list
 =
   match e with
-  | [] -> c
-  | AST.Variable _ :: es ->
-    constrain_exp c es
-  | AST.Literal (l, _) :: es ->
-    let c' = constrain_lit c l in
-    constrain_exp c' es
-  | AST.Application (exp1, exp2, tp) :: es ->
-    let exp1_tp = AST.exp_data exp1 in
-    let exp2_tp = AST.exp_data exp2 in
-    let terms = Array.of_list [exp2_tp; tp] in
-    let c' = (exp1_tp, Unify.funktion (function_id, terms)) :: c in
-    let e' = exp2 :: exp1 :: es in
-    constrain_exp c' e'
-  | AST.Abstraction (_, body, _) :: es ->
-    let e' = (body :: es) in
-    constrain_exp c e'
-  | AST.Binding (_, value, exp, _) :: es ->
-    let es' = value :: exp :: es in
-    constrain_exp c es'
-
-let constrain_top
-  (t : Unify.term AST.top)
-  : (Unify.term * Unify.term) list
-=
-  let rec fn c t = match t with
     | [] -> c
-    | AST.VariableDecl (_) :: es ->
-      fn c es
-    | AST.FunctionDecl (_, _, body, _) :: es ->
-      let c' = constrain_exp c [body] in
-      fn c' es
-    | AST.Expression (exp, _) :: es ->
-      let c' = constrain_exp c [exp] in
-      fn c' es
-  in
-  let c0 = [] in
-  let t0 = [t] in
-  fn c0 t0
+    | AST.Variable _ :: es ->
+      constrain_exp c es
+    | AST.Literal (l, _) :: es ->
+      let c' = constrain_lit c l in
+      constrain_exp c' es
+    | AST.Application (exp1, exp2, tp) :: es ->
+      let exp1_tp = AST.data exp1 in
+      let exp2_tp = AST.data exp2 in
+      let terms = Array.of_list [exp2_tp; tp] in
+      let c' = (exp1_tp, Unify.funktion (function_id, terms)) :: c in
+      let e' = exp2 :: exp1 :: es in
+      constrain_exp c' e'
+    | AST.Abstraction (_, body, _) :: es ->
+      let e' = (body :: es) in
+      constrain_exp c e'
+    | AST.Binding (_, value, exp, _) :: es ->
+      let es' = value :: exp :: es in
+      constrain_exp c es'
+
+let constrain e = constrain_exp [] [e]
 
 let rec annotate_literal
   (env : Unify.term Env.t)
@@ -182,7 +151,7 @@ let rec annotate_literal
     AST.Literal (i', Unify.constant integer_id)
   | PT.Tuple es ->
     let es' = List.map (annotate_expression env) es in
-    let tms = Array.of_list (List.map AST.exp_data es') in
+    let tms = Array.of_list (List.map AST.data es') in
     AST.Literal (AST.Tuple es', Unify.funktion (tuple_id, tms))
 
 
@@ -234,45 +203,49 @@ and annotate_expression
       let tm = Unify.variable (Unify.Identifier.fresh ()) in
       let env' = Env.add arg tm env in
       let body' = annotate_expression env' body in
-      let terms = Array.of_list [tm; AST.exp_data body'] in
+      let terms = Array.of_list [tm; AST.data body'] in
       AST.Abstraction (arg, body', Unify.funktion (function_id, terms))
     | PT.Binding (binds, exp) ->
       let rec fn env binds = match binds with
         | [] -> annotate_expression env exp
         | (id, value) :: tl ->
           let value' = annotate_expression env value in
-          let env' = Env.add id (AST.exp_data value') env in
+          let env' = Env.add id (AST.data value') env in
           let exp' = fn env' tl in
-          AST.Binding (id, value', exp', AST.exp_data exp')
+          AST.Binding (id, value', exp', AST.data exp')
       in
       fn env binds
 
 let rec annotate_top
   (env : Unify.term Env.t)
   (tops : PT.top list)
-  : Unify.term AST.top list
-= match tops with
-  | [] -> []
-  | hd :: tl -> match hd with
-    | PT.Declaration (PT.Variable id, exp) ->
-      let exp' = annotate_expression env exp in
-      let tm = AST.exp_data exp' in
-      let env' = Env.add id tm env in
-      AST.VariableDecl (id, exp', tm) :: annotate_top env' tl
-    | PT.Declaration (PT.Application (PT.Variable id, PT.Variable arg), exp) ->
-      let arg_tm = Unify.variable (Unify.Identifier.fresh ()) in
-      let exp' = annotate_expression (Env.add arg arg_tm env) exp in
-      let fun_tm = Unify.funktion (
-        function_id,
-        Array.of_list [arg_tm; AST.exp_data exp']
-      ) in
-      let env' = Env.add id fun_tm env in
-      AST.FunctionDecl (id, [arg], exp', fun_tm) :: annotate_top env' tl
-    | PT.Declaration _ ->
-      failwith "Expected a variable of function declaration"
-    | PT.Expression exp ->
-      let exp' = annotate_expression env exp in
-      AST.Expression (exp', AST.exp_data exp') :: annotate_top env tl
+  : Unify.term AST.exp list
+=
+  let dummy_exp =
+    AST.Variable ("", Unify.variable (Unify.Identifier.fresh ()))
+  in
+  match tops with
+    | [] -> []
+    | hd :: tl -> match hd with
+      | PT.Declaration (PT.Variable id, value) ->
+        let value' = annotate_expression env value in
+        let tm = AST.data value' in
+        let env' = Env.add id tm env in
+        AST.Binding (id, value', dummy_exp, tm) :: annotate_top env' tl
+      | PT.Declaration (PT.Application (PT.Variable id, PT.Variable arg), body) ->
+        let arg_tm = Unify.variable (Unify.Identifier.fresh ()) in
+        let body' = annotate_expression (Env.add arg arg_tm env) body in
+        let fun_tm = Unify.funktion (
+          function_id,
+          Array.of_list [arg_tm; AST.data body']
+        ) in
+        let env' = Env.add id fun_tm env in
+        let fn = AST.Abstraction (arg, body', fun_tm) in
+        AST.Binding (id, fn, dummy_exp, fun_tm) :: annotate_top env' tl
+      | PT.Declaration _ ->
+        failwith "Expected a variable of function declaration"
+      | PT.Expression exp ->
+        annotate_expression env exp :: annotate_top env tl
 
 let empty_env =
   let tp = Array.of_list [
@@ -292,7 +265,7 @@ let empty_env =
 
 let infer e =
   let tt = annotate_top empty_env e in
-  let cs = List.flatten (List.map constrain_top tt) in
+  let cs = List.flatten (List.map constrain tt) in
   let s = Unify.unify (cs) in
   let tt' = List.map (AST.map (Unify.Substitution.apply s)) tt in
   let tt'' = List.map (AST.map typo_of_term) tt' in

@@ -48,9 +48,7 @@ type typo =
 
 type exp = typo Abs_syntax_tree.exp
 
-type top = typo Abs_syntax_tree.top
-
-let to_typo tt = AST.top_data tt
+let to_typo tt = AST.data tt
 
 let rec typo_to_string tp = match tp with
   | Boolean ->
@@ -97,20 +95,3 @@ and exp_to_string tt = match tt with
       id
       (exp_to_string value)
       (exp_to_string e)
-
-let top_to_string tt = match tt with
-  | AST.VariableDecl (id, exp, tp) ->
-    Printf.sprintf "%s : %s = %s\n"
-      id
-      (typo_to_string tp)
-      (exp_to_string exp)
-  | AST.FunctionDecl (id, args, body, tp) ->
-    Printf.sprintf "%s(%s) : %s = %s\n"
-      id
-      (String.concat ", " args)
-      (typo_to_string tp)
-      (exp_to_string body)
-  | AST.Expression (exp, tp) ->
-    Printf.sprintf "(%s : %s)"
-      (exp_to_string exp)
-      (typo_to_string tp)
