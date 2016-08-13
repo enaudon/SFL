@@ -25,6 +25,9 @@ and 'a exp =
   | Abstraction of id * 'a exp * 'a
   | Binding of id * 'a exp * 'a exp * 'a
 
+(** Creates a tag expression for top-level bindings *)
+val top_tag : 'a -> 'a exp
+
 (** Returns the data associated with an abstract syntax tree expression.
  *)
 val data : 'a exp -> 'a

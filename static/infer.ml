@@ -221,8 +221,8 @@ let rec annotate_top
   (tops : PT.top list)
   : Unify.term AST.exp list
 =
-  let dummy_exp =
-    AST.Variable ("", Unify.variable (Unify.Identifier.fresh ()))
+  let top_tag =
+    AST.top_tag (Unify.variable (Unify.Identifier.fresh ()))
   in
   match tops with
     | [] -> []
@@ -231,7 +231,7 @@ let rec annotate_top
         let value' = annotate_expression env value in
         let tm = AST.data value' in
         let env' = Env.add id tm env in
-        AST.Binding (id, value', dummy_exp, tm) :: annotate_top env' tl
+        AST.Binding (id, value', top_tag, tm) :: annotate_top env' tl
       | PT.Declaration (PT.Application (PT.Variable id, PT.Variable arg), body) ->
         let arg_tm = Unify.variable (Unify.Identifier.fresh ()) in
         let body' = annotate_expression (Env.add arg arg_tm env) body in
@@ -241,7 +241,7 @@ let rec annotate_top
         ) in
         let env' = Env.add id fun_tm env in
         let fn = AST.Abstraction (arg, body', fun_tm) in
-        AST.Binding (id, fn, dummy_exp, fun_tm) :: annotate_top env' tl
+        AST.Binding (id, fn, top_tag, fun_tm) :: annotate_top env' tl
       | PT.Declaration _ ->
         failwith "Expected a variable of function declaration"
       | PT.Expression exp ->

@@ -35,17 +35,24 @@ and exp =
   | Abstraction of id * exp
   | Binding of (id * exp) list * exp
 
+(** The type of the parse tree top level. *)
 type top =
   | Declaration of exp * exp
   | Expression of exp
 
 (** {2 Functions} *)
 
-(** Returns the string representation of a binary operator *)
+(** Translate an expression into an AST expression. *)
+val exp_to_ast : exp -> unit Abs_syntax_tree.exp
+
+(** Translate an top-level expression into an AST expression. *)
+val top_to_ast : top -> unit Abs_syntax_tree.exp
+
+(** Returns the string representation of a binary operator. *)
 val binop_to_string : binop -> string
 
 (** Returns the string representation of an expression. *)
 val exp_to_string : exp -> string
 
-(** Returns the string representation of a top. *)
+(** Returns the string representation of a top-level expression. *)
 val top_to_string : top -> string

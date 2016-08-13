@@ -72,3 +72,55 @@ let top_to_string top = match top with
     Printf.sprintf "%s = %s\n" (exp_to_string exp1) (exp_to_string exp2)
   | Expression exp ->
     Printf.sprintf "%s\n" (exp_to_string exp)
+
+module AST = Abs_syntax_tree
+
+let rec lit_to_ast lit = match lit with
+  | Boolean b -> AST.Boolean b
+  | Integer i -> AST.Integer i
+  | Tuple es ->
+    let es' = List.map exp_to_ast es in
+    AST.Tuple es'
+
+and exp_to_ast exp = match exp with
+  | Variable id -> AST.Variable (id, ())
+  | Literal l ->
+    let l' = lit_to_ast l in
+    AST.Literal (l', ())
+  | BinaryOperation (op, e1, e2) ->
+    exp_to_ast (
+      Application (
+        Variable (binop_to_string op),
+        Literal (Tuple [e1; e2])
+      )
+    )
+  | Application (fn, arg) ->
+    let fn' = exp_to_ast fn in
+    let arg' = exp_to_ast arg in
+    AST.Application (fn', arg', ())
+  | Abstraction (arg, body) ->
+    let body' = exp_to_ast body in
+    AST.Abstraction (arg, body', ())
+  | Binding (binds, body) ->
+    let rec fn binds = match binds with
+      | [] -> exp_to_ast body
+      | (id, value) :: tl ->
+        let value' = exp_to_ast value in
+        AST.Binding (id, value', fn tl, ())
+    in
+    fn binds
+
+let top_to_ast exp =
+  let top_tag = AST.top_tag () in
+  match exp with
+    | Declaration (Variable id, value) ->
+      let value' = exp_to_ast value in
+      AST.Binding (id, value', top_tag, ())
+    | Declaration (Application (Variable id, Variable arg), body) ->
+      let body' = exp_to_ast body in
+      let fn = AST.Abstraction (arg, body', ()) in
+      AST.Binding (id, fn, top_tag, ())
+    | Declaration _ ->
+      failwith "Expected a variable of function declaration"
+    | Expression exp ->
+      exp_to_ast exp

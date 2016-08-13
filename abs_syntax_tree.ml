@@ -17,6 +17,8 @@ and 'a exp =
   | Abstraction of id * 'a exp * 'a
   | Binding of id * 'a exp * 'a exp * 'a
 
+let top_tag data = Variable ("", data)
+
 let data e = match e with
   | Variable (_, data) -> data
   | Literal (_, data) -> data
