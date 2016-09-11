@@ -43,10 +43,10 @@ type top =
 (** {2 Functions} *)
 
 (** Translate an expression into an AST expression. *)
-val exp_to_ast : exp -> unit Abs_syntax_tree.exp
+val exp_to_ast : exp -> Abs_syntax_tree2.exp
 
 (** Translate an top-level expression into an AST expression. *)
-val top_to_ast : top -> unit Abs_syntax_tree.exp
+val top_to_ast : top -> Abs_syntax_tree2.exp
 
 (** Returns the string representation of a binary operator. *)
 val binop_to_string : binop -> string

@@ -53,14 +53,14 @@ and exp_to_string pt =
     | Variable x -> x
     | Literal l -> lit_to_string l
     | BinaryOperation (op, pt1, pt2) ->
-      Printf.sprintf "(%s %s %s)"
+      Printf.sprintf "%s %s %s"
         (exp_to_string pt1)
         (binop_to_string op)
         (exp_to_string pt2)
     | Application (pt1, pt2) ->
-      Printf.sprintf "%s(%s)" (paren pt1) (exp_to_string pt2)
+      Printf.sprintf "%s %s" (paren pt1) (exp_to_string pt2)
     | Abstraction (arg, body) ->
-      Printf.sprintf "(%s -> %s)" arg (exp_to_string body)
+      Printf.sprintf "%s -> %s" arg (exp_to_string body)
     | Binding (binds, pt) ->
       let fn (id, e) = Printf.sprintf "%s = %s" id (exp_to_string e) in
       Printf.sprintf "let %s in %s"
@@ -73,7 +73,7 @@ let top_to_string top = match top with
   | Expression exp ->
     Printf.sprintf "%s\n" (exp_to_string exp)
 
-module AST = Abs_syntax_tree
+module AST = Abs_syntax_tree2
 
 let rec lit_to_ast lit = match lit with
   | Boolean b -> AST.Boolean b
@@ -83,43 +83,48 @@ let rec lit_to_ast lit = match lit with
     AST.Tuple es'
 
 and exp_to_ast exp = match exp with
-  | Variable id -> AST.Variable (id, ())
+  | Variable id -> AST.Variable (id)
   | Literal l ->
     let l' = lit_to_ast l in
-    AST.Literal (l', ())
+    AST.Literal (l')
   | BinaryOperation (op, e1, e2) ->
     exp_to_ast (
       Application (
-        Variable (binop_to_string op),
-        Literal (Tuple [e1; e2])
+        Application (Variable (binop_to_string op), e1),
+        e2
       )
     )
   | Application (fn, arg) ->
     let fn' = exp_to_ast fn in
     let arg' = exp_to_ast arg in
-    AST.Application (fn', arg', ())
+    AST.Application (fn', arg')
   | Abstraction (arg, body) ->
     let body' = exp_to_ast body in
-    AST.Abstraction (arg, body', ())
+    let tp = Ast_type.Variable (Ast_type.TypeVariable.create arg) in
+    AST.Abstraction (arg, tp, body')
   | Binding (binds, body) ->
     let rec fn binds = match binds with
       | [] -> exp_to_ast body
       | (id, value) :: tl ->
         let value' = exp_to_ast value in
-        AST.Binding (id, value', fn tl, ())
+        let tp = Ast_type.Variable (Ast_type.TypeVariable.create id) in
+        AST.Binding (id, tp, value', fn tl)
     in
     fn binds
 
 let top_to_ast exp =
-  let top_tag = AST.top_tag () in
+  let top_tag = AST.top_tag in
   match exp with
     | Declaration (Variable id, value) ->
       let value' = exp_to_ast value in
-      AST.Binding (id, value', top_tag, ())
+      let tp = Ast_type.Variable (Ast_type.TypeVariable.create id) in
+      AST.Binding (id, tp, value', top_tag)
     | Declaration (Application (Variable id, Variable arg), body) ->
       let body' = exp_to_ast body in
-      let fn = AST.Abstraction (arg, body', ()) in
-      AST.Binding (id, fn, top_tag, ())
+      let arg_tp = Ast_type.Variable (Ast_type.TypeVariable.create arg) in
+      let fn = AST.Abstraction (arg, arg_tp, body') in
+      let fn_tp = Ast_type.Variable (Ast_type.TypeVariable.create id) in
+      AST.Binding (id, fn_tp, fn, top_tag)
     | Declaration _ ->
       failwith "Expected a variable of function declaration"
     | Expression exp ->
