@@ -12,7 +12,8 @@ module TypeVariable = struct
       Hashtbl.add ht name 1;
       (name, 0)
 
-  let to_string (n, i) = n ^ (string_of_int i)
+  let to_string (n, i) = Printf.sprintf "%s%d" n i
+  let name (n, _) = n
 
   type _t = t
   module S = struct

@@ -28,8 +28,11 @@ and exp =
 (** Creates a tag expression for top-level bindings *)
 val top_tag : exp
 
+(** Computes the type of an expression *)
+val to_type : exp -> Ast_type.t
+
 (** Type checks an expression *)
-val type_check : exp -> Ast_type.t
+val typecheck : exp -> Ast_type.t
 
 val constrain : exp list -> (Ast_type.t * Ast_type.t) list
 

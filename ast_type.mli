@@ -19,14 +19,17 @@ module TypeVariable : sig
   (** Returns the string representation of a type variable. *)
   val to_string : t -> string
 
+  (** Returns the name of a type variable. *)
+  val name : t -> string
+
 
   (** {2 Containers} *)
 
   (** The type of sets of type variables. *)
   module type SET = Set.S with type elt = t
 
-  module Set : SET
   (** Sets of type variables. *)
+  module Set : SET
 
   (** The type of maps of type variables. *)
   module type MAP = Map.S with type key = t

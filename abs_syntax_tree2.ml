@@ -22,39 +22,53 @@ let top_tag = Variable ""
 module type ENV = Map.S with type key = string
 module Env = Map.Make (String)
 
+let empty_env =
+  let tp = Ast_type.Function (
+    Ast_type.Integer,
+    Ast_type.Function (Ast_type.Integer, Ast_type.Integer)
+  ) in
+  List.fold_left
+    (fun acc id -> Env.add id tp acc)
+    (Env.empty)
+    ["+"; "-"; "*"; "/"; "%"]
+
 let tp_of_variable env id =
   try Env.find id env
   with Not_found ->
     failwith (Printf.sprintf "Unbound variable \"%s\"" id)
 
-let rec tp_of_exp env e = match e with
-  | Variable id -> tp_of_variable env id
-  | Literal l ->
-    begin match l with
-      | Boolean _ -> Ast_type.Boolean
-      | Integer _ -> Ast_type.Integer
-      | Tuple es -> Ast_type.Tuple (List.map (tp_of_exp env) es)
-    end
-  | Application (exp1, exp2) ->
-    let tp1 = tp_of_exp env exp1 in
-    let tp2 = tp_of_exp env exp2 in
-    begin match tp1 with
-      | Ast_type.Function (arg_tp, ret_tp) ->
-        if arg_tp <> tp2
-          then failwith "Unexpected argument type!"
-          else ret_tp
-      | _ -> failwith "Cannot apply non-function"
-    end
-  | Abstraction (arg, tp, body) ->
-    let env' = Env.add arg tp env in
-    let tp' = tp_of_exp env' body in
-    Ast_type.Function (tp, tp')
-  | Binding (id, tp, _, exp) ->
-    let env' = Env.add id tp env in
-    tp_of_exp env' exp
+let tp_of_exp tpchk env e =
+  let rec helper env e = match e with
+    | Variable id -> tp_of_variable env id
+    | Literal l ->
+      begin match l with
+        | Boolean _ -> Ast_type.Boolean
+        | Integer _ -> Ast_type.Integer
+        | Tuple es -> Ast_type.Tuple (List.map (helper env) es)
+      end
+    | Application (fn, arg) ->
+      begin match helper env fn with
+        | Ast_type.Function (arg_tp, ret_tp) ->
+          if tpchk && arg_tp <> (helper env arg)
+            then failwith "Argument and function types do not match!"
+            else ret_tp
+        | _ -> failwith "Cannot apply non-function"
+      end
+    | Abstraction (arg, tp, body) ->
+      let env' = Env.add arg tp env in
+      let tp' = helper env' body in
+      Ast_type.Function (tp, tp')
+    | Binding (id, tp, _, exp) ->
+      let env' = Env.add id tp env in
+      helper env' exp
+  in
+  helper env e
 
-let type_check exp =
-  tp_of_exp Env.empty exp
+let to_type exp =
+  tp_of_exp false empty_env exp
+
+let typecheck exp =
+  tp_of_exp true empty_env exp
 
 let rec constrain_exp env exp = match exp with
   | Variable id ->
@@ -73,7 +87,14 @@ let rec constrain_exp env exp = match exp with
   | Application (func, arg) ->
     let func_tp, func_cs = constrain_exp env func in
     let arg_tp, arg_cs = constrain_exp env arg in
-    let ret_tp = Ast_type.Variable (Ast_type.TypeVariable.create "ret") in
+    let ret_tp = match func with
+      | Variable id ->
+        Ast_type.Variable
+          (Ast_type.TypeVariable.create
+            (Printf.sprintf "%s.ret" id))
+      | _ ->
+        Ast_type.Variable (Ast_type.TypeVariable.create "ret")
+    in
     let cs =
       (func_tp, Ast_type.Function (arg_tp, ret_tp)) :: func_cs @ arg_cs
     in
@@ -98,21 +119,11 @@ let rec constrain_top
           let env' = Env.add id tp env in
           let _, cs = constrain_exp env' value in
           (env', cs)
-        | _ -> 
+        | _ ->
           let _, cs = constrain_exp env e in
           (env, cs)
       in
       cs @ constrain_top env' es
-
-let empty_env =
-  let tp = Ast_type.Function (
-    Ast_type.Integer,
-    Ast_type.Function (Ast_type.Integer, Ast_type.Integer)
-  ) in
-  List.fold_left
-    (fun acc id -> Env.add id tp acc) 
-    (Env.empty)
-    ["+"; "-"; "*"; "/"; "%"]
 
 let constrain exp = constrain_top empty_env exp
 

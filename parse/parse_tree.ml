@@ -100,14 +100,16 @@ and exp_to_ast exp = match exp with
     AST.Application (fn', arg')
   | Abstraction (arg, body) ->
     let body' = exp_to_ast body in
-    let tp = Ast_type.Variable (Ast_type.TypeVariable.create arg) in
-    AST.Abstraction (arg, tp, body')
+    let arg_tp = Ast_type.Variable (Ast_type.TypeVariable.create arg) in
+    let ret_tp = AST.to_type body' in
+    let fn_tp = Ast_type.Function (arg_tp, ret_tp) in
+    AST.Abstraction (arg, fn_tp, body')
   | Binding (binds, body) ->
     let rec fn binds = match binds with
       | [] -> exp_to_ast body
       | (id, value) :: tl ->
         let value' = exp_to_ast value in
-        let tp = Ast_type.Variable (Ast_type.TypeVariable.create id) in
+        let tp = AST.to_type value' in
         AST.Binding (id, tp, value', fn tl)
     in
     fn binds
@@ -117,13 +119,14 @@ let top_to_ast exp =
   match exp with
     | Declaration (Variable id, value) ->
       let value' = exp_to_ast value in
-      let tp = Ast_type.Variable (Ast_type.TypeVariable.create id) in
+      let tp = AST.to_type value' in
       AST.Binding (id, tp, value', top_tag)
     | Declaration (Application (Variable id, Variable arg), body) ->
       let body' = exp_to_ast body in
       let arg_tp = Ast_type.Variable (Ast_type.TypeVariable.create arg) in
+      let ret_tp = AST.to_type body' in
+      let fn_tp = Ast_type.Function (arg_tp, ret_tp) in
       let fn = AST.Abstraction (arg, arg_tp, body') in
-      let fn_tp = Ast_type.Variable (Ast_type.TypeVariable.create id) in
       AST.Binding (id, fn_tp, fn, top_tag)
     | Declaration _ ->
       failwith "Expected a variable of function declaration"
