@@ -100,9 +100,9 @@ and exp_to_ast exp = match exp with
     AST.Application (fn', arg')
   | Abstraction (arg, body) ->
     let body' = exp_to_ast body in
-    let arg_tp = Ast_type.Variable (Ast_type.TypeVariable.create arg) in
+    let arg_tp = Type.Variable (Type.TypeVariable.create arg) in
     let ret_tp = AST.to_type body' in
-    let fn_tp = Ast_type.Function (arg_tp, ret_tp) in
+    let fn_tp = Type.Function (arg_tp, ret_tp) in
     AST.Abstraction (arg, fn_tp, body')
   | Binding (binds, body) ->
     let rec fn binds = match binds with
@@ -123,9 +123,9 @@ let top_to_ast exp =
       AST.Binding (id, tp, value', top_tag)
     | Declaration (Application (Variable id, Variable arg), body) ->
       let body' = exp_to_ast body in
-      let arg_tp = Ast_type.Variable (Ast_type.TypeVariable.create arg) in
+      let arg_tp = Type.Variable (Type.TypeVariable.create arg) in
       let ret_tp = AST.to_type body' in
-      let fn_tp = Ast_type.Function (arg_tp, ret_tp) in
+      let fn_tp = Type.Function (arg_tp, ret_tp) in
       let fn = AST.Abstraction (arg, arg_tp, body') in
       AST.Binding (id, fn_tp, fn, top_tag)
     | Declaration _ ->

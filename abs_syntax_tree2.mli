@@ -22,19 +22,19 @@ and exp =
   | Variable of id
   | Literal of lit
   | Application of exp * exp
-  | Abstraction of id * Ast_type.t * exp
-  | Binding of id * Ast_type.t * exp * exp
+  | Abstraction of id * Type.t * exp
+  | Binding of id * Type.t * exp * exp
 
 (** Creates a tag expression for top-level bindings *)
 val top_tag : exp
 
 (** Computes the type of an expression *)
-val to_type : exp -> Ast_type.t
+val to_type : exp -> Type.t
 
 (** Type checks an expression *)
-val typecheck : exp -> Ast_type.t
+val typecheck : exp -> Type.t
 
-val constrain : exp list -> (Ast_type.t * Ast_type.t) list
+val constrain : exp list -> (Type.t * Type.t) list
 
 val lit_to_string : lit -> string
 val exp_to_string : exp -> string
