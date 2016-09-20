@@ -56,17 +56,15 @@ let rec exp_to_llvalue env ast = match ast with
     let env' = StrMap.add id llval env in
     exp_to_llvalue env' exp
 
-module TT = Type_tree
 let rec typo_to_llvm tp = match tp with
-  | TT.Boolean -> bool_type
-  | TT.Integer -> int_type
-  | TT.Variable _ -> failwith "TT.Variable not implemented"
-  | TT.Function (arg_tp, ret_tp) ->
+  | Type.Boolean -> bool_type
+  | Type.Integer -> int_type
+  | Type.Variable _ -> failwith "Type.Variable not implemented"
+  | Type.Function (arg_tp, ret_tp) ->
     let arg_tp' = typo_to_llvm arg_tp in
     let ret_tp' = typo_to_llvm ret_tp in
     LL.function_type ret_tp' (Array.make 1 arg_tp')
-  | TT.Product _ -> failwith "TT.Product not implemented"
-  | TT.Disjunction _ -> failwith "TT.Disjunction not implemented"
+  | Type.Tuple _ -> failwith "Type.Tuple not implemented"
 
 let top_to_llvalue llmod env top = match top with
   | IR.VariableDecl (id, exp) ->

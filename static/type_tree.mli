@@ -21,6 +21,7 @@ module TypeVariable : sig
 
   (** Returns the string representation of a type variable. *)
   val to_string : t -> string
+  val name : t -> string
 
 
   (** {2 Containers} *)

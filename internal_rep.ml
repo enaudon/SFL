@@ -1,5 +1,5 @@
 module AST = Abs_syntax_tree
-module StrMap = Map.Make (String)
+module AST2 = Abs_syntax_tree2
 
 type id = string
 
@@ -23,13 +23,8 @@ type exp =
 
 type top =
   | VariableDecl of id * exp
-  | FunctionDecl of id * id list * exp * Type_tree.typo
+  | FunctionDecl of id * id list * exp * Type.t
   | Expression of exp
-
-let lit_of_tt l = match l with
-  | AST.Integer i -> Integer i
-  | AST.Boolean b -> Boolean b
-  | AST.Tuple _ -> failwith "AST.Tuple to IR not implemented"
 
 let binop_of_string id = match id with
   | "+" -> Addition
@@ -38,6 +33,27 @@ let binop_of_string id = match id with
   | "/" -> Division
   | "%" -> Modulo
   | _ -> failwith "unsupported binary operation"
+
+module TT = Type_tree
+let rec type_t_of_tt_type tp = match tp with
+  | TT.Boolean -> Type.Boolean
+  | TT.Integer -> Type.Integer
+  | TT.Variable tv ->
+    let tv' = Type.TypeVariable.create (TT.TypeVariable.name tv) in
+    Type.Variable tv'
+  | TT.Function (arg, ret) ->
+    let arg' = type_t_of_tt_type arg in
+    let ret' = type_t_of_tt_type ret in
+    Type.Function (arg', ret')
+  | TT.Product tps ->
+    let tps' = List.map type_t_of_tt_type tps in
+    Type.Tuple tps'
+  | TT.Disjunction _ -> failwith "TT.Disjunction not implemented"
+
+let lit_of_tt l = match l with
+  | AST.Integer i -> Integer i
+  | AST.Boolean b -> Boolean b
+  | AST.Tuple _ -> failwith "AST.Tuple to IR not implemented"
 
 let rec binop_of_tt_abs (exp1, exp2) = match exp1, exp2 with
   | AST.Variable (id, _), AST.Literal (AST.Tuple [lhs; rhs], _) ->
@@ -48,7 +64,7 @@ let rec binop_of_tt_abs (exp1, exp2) = match exp1, exp2 with
   | _ ->
     failwith "IR.binop_of_tt_abs: AST.Application to IR not implemented"
 
-and exp_of_tt tt = match tt with
+and exp_of_tt exp = match exp with
   | AST.Variable (id, _) -> Variable id
   | AST.Literal (l, _) -> Literal (lit_of_tt l)
   | AST.Application (exp1, exp2, _) ->
@@ -68,14 +84,43 @@ and exp_of_tt tt = match tt with
     let exp' = exp_of_tt exp in
     Binding (id, value', exp')
 
-let top_of_tt tt = match tt with
+let top_of_tt exp = match exp with
   | AST.Binding (id, AST.Abstraction (arg, body, tp), AST.Variable ("", _), _) ->
     let body' = exp_of_tt body in
-    FunctionDecl (id, [arg], body', tp)
+    FunctionDecl (id, [arg], body', type_t_of_tt_type tp)
   | AST.Binding (id, value, AST.Variable ("", _), _) ->
     let value' = exp_of_tt value in
     VariableDecl (id, value')
-  | _ -> Expression (exp_of_tt tt)
+  | _ -> Expression (exp_of_tt exp)
+
+let lit_of_ast l = match l with
+  | AST2.Integer i -> Integer i
+  | AST2.Boolean b -> Boolean b
+  | AST2.Tuple _ -> failwith "AST.Tuple to IR not implemented"
+
+let rec exp_of_ast exp = match exp with
+  | AST2.Variable id -> Variable id
+  | AST2.Literal l -> Literal (lit_of_ast l)
+  | AST2.Application _ ->
+    failwith "IR.exp_of_ast: AST.Application to IR not implemented"
+  | AST2.Abstraction _ ->
+    failwith "IR.exp_of_ast: AST.Abstraction to IR not implemented"
+  | AST2.Binding (id, _, value, exp) ->
+    let value' = exp_of_ast value in
+    let exp' = exp_of_ast exp in
+    Binding (id, value', exp')
+
+let top_of_ast exp = match exp with
+  | AST2.Binding (id, _, value, exp) when exp = AST2.top_tag ->
+    begin match value with
+      | AST2.Abstraction (arg, tp, body) ->
+        let body' = exp_of_ast body in
+        FunctionDecl (id, [arg], body', tp)
+      | _ ->
+        let value' = exp_of_ast value in
+        VariableDecl (id, value')
+    end
+  | _ -> Expression (exp_of_ast exp)
 
 let lit_to_string l = match l with
   | Boolean b -> string_of_bool b

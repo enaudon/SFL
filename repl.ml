@@ -31,6 +31,11 @@ let rec repl () =
     Printf.printf ">> Type:\n%s\n"
       (String.concat "\n"
         (List.map TT.typo_to_string (List.map TT.to_typo tt)));
+    let ir_old = List.map IR.top_of_tt tt in
+    Printf.printf ">> Internal Rep:\n%s"
+      (String.concat "" (List.map IR.top_to_string ir_old));
+    let ll_old = LL.translate ir_old in
+    Printf.printf ">> LLVM:\n%s" (Llvm.string_of_llmodule ll_old);
 
     (* New pathway *)
     let ast = PT.top_to_ast pt in
@@ -39,12 +44,12 @@ let rec repl () =
     let ast' = Infer2.infer ast in
     Printf.printf "  ----\n%s\n"
       (String.concat "\n" (List.map AST2.exp_to_string ast'));
-
-    let ir = List.map IR.top_of_tt tt in
+    let ir_new = List.map IR.top_of_ast ast in
     Printf.printf ">> Internal Rep:\n%s"
-      (String.concat "" (List.map IR.top_to_string ir));
-    let ll = LL.translate ir in
-    Printf.printf ">> LLVM:\n%s" (Llvm.string_of_llmodule ll);
+      (String.concat "" (List.map IR.top_to_string ir_new));
+    let ll_new = LL.translate ir_new in
+    Printf.printf ">> LLVM:\n%s" (Llvm.string_of_llmodule ll_new);
+
     repl ()
   with
     | Failure msg ->  Printf.printf "%s\n" msg; repl ()

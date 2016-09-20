@@ -18,6 +18,7 @@ module TypeVariable = struct
       (name, 0)
 
   let to_string (n, i) = n ^ (string_of_int i)
+  let name (n, _) = n
 
   type _t = t
   module S = struct
