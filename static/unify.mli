@@ -2,10 +2,11 @@
 
 
 module Identifier : sig
-  type t = int
+  type t
 
   val reset : unit -> unit
   val fresh : unit -> t
+  val to_string : t -> string
 
   module type SET = Set.S with type elt = t
   module Set : SET

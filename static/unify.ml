@@ -7,6 +7,7 @@ module Identifier = struct
     let i = !next in
     incr next;
     i
+  let to_string = Printf.sprintf "%d"
 
   type _t = t
   module S = struct
