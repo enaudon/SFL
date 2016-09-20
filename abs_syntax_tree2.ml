@@ -19,7 +19,6 @@ and exp =
 
 let top_tag = Variable ""
 
-module type ENV = Map.S with type key = string
 module Env = Map.Make (String)
 
 let empty_env =
@@ -64,11 +63,8 @@ let tp_of_exp tpchk env e =
   in
   helper env e
 
-let to_type exp =
-  tp_of_exp false empty_env exp
-
-let typecheck exp =
-  tp_of_exp true empty_env exp
+let to_type = tp_of_exp false
+let typecheck = tp_of_exp true
 
 let rec constrain_exp env exp = match exp with
   | Variable id ->

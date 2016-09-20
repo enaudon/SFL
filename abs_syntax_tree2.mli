@@ -25,14 +25,17 @@ and exp =
   | Abstraction of id * Type.t * exp
   | Binding of id * Type.t * exp * exp
 
+module Env : Map.S with type key = id
+val empty_env : Type.t Env.t
+
 (** Creates a tag expression for top-level bindings *)
 val top_tag : exp
 
 (** Computes the type of an expression *)
-val to_type : exp -> Type.t
+val to_type : Type.t Env.t -> exp -> Type.t
 
 (** Type checks an expression *)
-val typecheck : exp -> Type.t
+val typecheck : Type.t Env.t -> exp -> Type.t
 
 val constrain : exp list -> (Type.t * Type.t) list
 

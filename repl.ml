@@ -33,7 +33,7 @@ let rec repl () =
         (List.map TT.typo_to_string (List.map TT.to_typo tt)));
 
     (* New pathway *)
-    let ast = List.map PT.top_to_ast pt in
+    let ast = PT.top_to_ast pt in
     Printf.printf ">> Abs Syntax Tree II:\n%s\n"
       (String.concat "\n" (List.map AST2.exp_to_string ast));
     let ast' = Infer2.infer ast in

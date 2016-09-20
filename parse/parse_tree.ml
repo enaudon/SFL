@@ -74,61 +74,71 @@ let top_to_string top = match top with
     Printf.sprintf "%s\n" (exp_to_string exp)
 
 module AST = Abs_syntax_tree2
+module Env = AST.Env
 
-let rec lit_to_ast lit = match lit with
+let rec lit_to_ast env lit = match lit with
   | Boolean b -> AST.Boolean b
   | Integer i -> AST.Integer i
   | Tuple es ->
-    let es' = List.map exp_to_ast es in
+    let es' = List.map (exp_to_ast env) es in
     AST.Tuple es'
 
-and exp_to_ast exp = match exp with
+and exp_to_ast env exp = match exp with
   | Variable id -> AST.Variable (id)
   | Literal l ->
-    let l' = lit_to_ast l in
+    let l' = lit_to_ast env l in
     AST.Literal (l')
   | BinaryOperation (op, e1, e2) ->
-    exp_to_ast (
+    exp_to_ast env (
       Application (
         Application (Variable (binop_to_string op), e1),
         e2
       )
     )
   | Application (fn, arg) ->
-    let fn' = exp_to_ast fn in
-    let arg' = exp_to_ast arg in
+    let fn' = exp_to_ast env fn in
+    let arg' = exp_to_ast env arg in
     AST.Application (fn', arg')
   | Abstraction (arg, body) ->
-    let body' = exp_to_ast body in
+    let body' = exp_to_ast env body in
     let arg_tp = Type.Variable (Type.TypeVariable.create arg) in
-    let ret_tp = AST.to_type body' in
+    let ret_tp = AST.to_type env body' in
     let fn_tp = Type.Function (arg_tp, ret_tp) in
     AST.Abstraction (arg, fn_tp, body')
   | Binding (binds, body) ->
-    let rec fn binds = match binds with
-      | [] -> exp_to_ast body
+    let rec fn env binds = match binds with
+      | [] -> exp_to_ast env body
       | (id, value) :: tl ->
-        let value' = exp_to_ast value in
-        let tp = AST.to_type value' in
-        AST.Binding (id, tp, value', fn tl)
+        let value' = exp_to_ast env value in
+        let tp = AST.to_type env value' in
+        let env' = Env.add id tp env in
+        let exp = fn env' tl in
+        AST.Binding (id, tp, value', exp)
     in
-    fn binds
+    fn env binds
 
-let top_to_ast exp =
+let top_to_ast =
   let top_tag = AST.top_tag in
-  match exp with
-    | Declaration (Variable id, value) ->
-      let value' = exp_to_ast value in
-      let tp = AST.to_type value' in
-      AST.Binding (id, tp, value', top_tag)
-    | Declaration (Application (Variable id, Variable arg), body) ->
-      let body' = exp_to_ast body in
-      let arg_tp = Type.Variable (Type.TypeVariable.create arg) in
-      let ret_tp = AST.to_type body' in
-      let fn_tp = Type.Function (arg_tp, ret_tp) in
-      let fn = AST.Abstraction (arg, arg_tp, body') in
-      AST.Binding (id, fn_tp, fn, top_tag)
-    | Declaration _ ->
-      failwith "Expected a variable of function declaration"
-    | Expression exp ->
-      exp_to_ast exp
+  let rec helper env exps = match exps with
+    | [] -> []
+    | hd :: tl ->
+      match hd with
+        | Declaration (Variable id, value) ->
+          let value' = exp_to_ast env value in
+          let tp = AST.to_type env value' in
+          let env' = Env.add id tp env in
+          AST.Binding (id, tp, value', top_tag) :: helper env' tl
+        | Declaration (Application (Variable id, Variable arg), body) ->
+          let body' = exp_to_ast env body in
+          let arg_tp = Type.Variable (Type.TypeVariable.create arg) in
+          let ret_tp = AST.to_type (Env.add arg arg_tp env) body' in
+          let fn_tp = Type.Function (arg_tp, ret_tp) in
+          let env' = Env.add id fn_tp env in
+          let fn = AST.Abstraction (arg, arg_tp, body') in
+          AST.Binding (id, fn_tp, fn, top_tag) :: helper env' tl
+        | Declaration _ ->
+          failwith "Expected a variable of function declaration"
+        | Expression exp ->
+          exp_to_ast env exp :: helper env tl
+    in
+    helper AST.empty_env
