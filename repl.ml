@@ -32,10 +32,10 @@ let rec repl () =
       (String.concat "\n"
         (List.map TT.typo_to_string (List.map TT.to_typo tt)));
     let ir_old = List.map IR.top_of_tt tt in
-    Printf.printf ">> Internal Rep:\n%s"
+    Printf.printf ">> Internal Rep I:\n%s"
       (String.concat "" (List.map IR.top_to_string ir_old));
     let ll_old = LL.translate ir_old in
-    Printf.printf ">> LLVM:\n%s" (Llvm.string_of_llmodule ll_old);
+    Printf.printf ">> LLVM I:\n%s" (Llvm.string_of_llmodule ll_old);
 
     (* New pathway *)
     let ast = PT.top_to_ast pt in
@@ -44,16 +44,16 @@ let rec repl () =
     let ast' = Infer2.infer ast in
     Printf.printf "  ----\n%s\n"
       (String.concat "\n" (List.map AST2.exp_to_string ast'));
-    let ir_new = List.map IR.top_of_ast ast in
-    Printf.printf ">> Internal Rep:\n%s"
+    let ir_new = List.map IR.top_of_ast ast' in
+    Printf.printf ">> Internal Rep II:\n%s"
       (String.concat "" (List.map IR.top_to_string ir_new));
+    assert (ir_new = ir_old);
     let ll_new = LL.translate ir_new in
-    Printf.printf ">> LLVM:\n%s" (Llvm.string_of_llmodule ll_new);
+    Printf.printf ">> LLVM II:\n%s" (Llvm.string_of_llmodule ll_new);
 
     repl ()
   with
     | Failure msg ->  Printf.printf "%s\n" msg; repl ()
     | Parsing.Parse_error -> Printf.printf "Parser error\n"; repl ()
-    | _ -> Printf.printf "Unknown error\n"; repl ()
 
 let _ = repl()

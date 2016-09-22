@@ -137,7 +137,7 @@ let top_to_ast =
           let fn = AST.Abstraction (arg, arg_tp, body') in
           AST.Binding (id, fn_tp, fn, top_tag) :: helper env' tl
         | Declaration _ ->
-          failwith "Expected a variable of function declaration"
+          failwith "Expected a variable or function declaration"
         | Expression exp ->
           exp_to_ast env exp :: helper env tl
     in
