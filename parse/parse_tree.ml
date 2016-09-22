@@ -101,10 +101,8 @@ and exp_to_ast env exp = match exp with
     AST.Application (fn', arg')
   | Abstraction (arg, body) ->
     let body' = exp_to_ast env body in
-    let arg_tp = Type.Variable (Type.TypeVariable.create arg) in
-    let ret_tp = AST.to_type env body' in
-    let fn_tp = Type.Function (arg_tp, ret_tp) in
-    AST.Abstraction (arg, fn_tp, body')
+    let tp = Type.Variable (Type.TypeVariable.create arg) in
+    AST.Abstraction (arg, tp, body')
   | Binding (binds, body) ->
     let rec fn env binds = match binds with
       | [] -> exp_to_ast env body
@@ -133,8 +131,8 @@ let top_to_ast =
           let arg_tp = Type.Variable (Type.TypeVariable.create arg) in
           let ret_tp = AST.to_type (Env.add arg arg_tp env) body' in
           let fn_tp = Type.Function (arg_tp, ret_tp) in
-          let env' = Env.add id fn_tp env in
           let fn = AST.Abstraction (arg, arg_tp, body') in
+          let env' = Env.add id fn_tp env in
           AST.Binding (id, fn_tp, fn, top_tag) :: helper env' tl
         | Declaration _ ->
           failwith "Expected a variable or function declaration"
