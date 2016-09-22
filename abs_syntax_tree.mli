@@ -10,33 +10,34 @@
 type id = string
 
 (** The type of literal values. *)
-type 'a lit =
+type lit =
   | Boolean of bool
   | Integer of int
-  | Tuple of 'a exp list
+  | Tuple of exp list
 
 (** The type of abstract syntax trees of type ['a].  An abstact syntax
     tree carries data at each node.
  *)
-and 'a exp =
-  | Variable of id * 'a
-  | Literal of 'a lit * 'a
-  | Application of 'a exp * 'a exp * 'a
-  | Abstraction of id * 'a exp * 'a
-  | Binding of id * 'a exp * 'a exp * 'a
+and exp =
+  | Variable of id
+  | Literal of lit
+  | Application of exp * exp
+  | Abstraction of id * Type.t * exp
+  | Binding of id * Type.t * exp * exp
+
+module Env : Map.S with type key = id
+val empty_env : Type.t Env.t
 
 (** Creates a tag expression for top-level bindings *)
-val top_tag : 'a -> 'a exp
+val top_tag : exp
 
-(** Returns the data associated with an abstract syntax tree expression.
- *)
-val data : 'a exp -> 'a
+(** Computes the type of an expression *)
+val to_type : Type.t Env.t -> exp -> Type.t
 
-(** [map fn ast] returns a new abstract syntax tree with the same
-    structure as [ast], but where the data, [d], at with each node has
-    been replaced with the result of applying [fn] to [d].
- *)
-val map : ('a -> 'b) -> 'a exp -> 'b exp
+(** Type checks an expression *)
+val typecheck : Type.t Env.t -> exp -> Type.t
 
-val lit_to_string : 'a lit -> string
-val exp_to_string : 'a exp -> string
+val constrain : exp list -> (Type.t * Type.t) list
+
+val lit_to_string : lit -> string
+val exp_to_string : exp -> string

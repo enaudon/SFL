@@ -73,7 +73,7 @@ let top_to_string top = match top with
   | Expression exp ->
     Printf.sprintf "%s\n" (exp_to_string exp)
 
-module AST = Abs_syntax_tree2
+module AST = Abs_syntax_tree
 module Env = AST.Env
 
 let rec lit_to_ast env lit = match lit with
