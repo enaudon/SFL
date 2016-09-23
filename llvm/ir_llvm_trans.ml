@@ -103,7 +103,7 @@ let top_to_llvalue llmod env top = match top with
     let _ = LL.build_ret llval llbld in
     env
 
-let translate ir =
+let f ir =
   let env0 = StrMap.empty in
   let _ = List.fold_left (top_to_llvalue llmod) env0 ir in
   llmod

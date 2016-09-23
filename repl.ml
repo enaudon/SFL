@@ -6,7 +6,6 @@
 module PT = Parse_tree
 module AST = Abs_syntax_tree
 module IR = Internal_rep
-module LL = Llvm_trans
 
 
 let parse s =
@@ -32,7 +31,7 @@ let rec repl () =
     let ir = List.map Ast_ir_trans.f ast' in
     Printf.printf ">> Internal Rep II:\n%s"
       (String.concat "" (List.map IR.top_to_string ir));
-    let ll = LL.translate ir in
+    let ll = Ir_llvm_trans.f ir in
     Printf.printf ">> LLVM II:\n%s" (Llvm.string_of_llmodule ll);
 
     repl ()
