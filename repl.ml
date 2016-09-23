@@ -23,7 +23,7 @@ let rec repl () =
       (String.concat "" (List.map PT.top_to_string pt));
 
     (* New pathway *)
-    let ast = PT.top_to_ast pt in
+    let ast = Pt_ast_trans.f pt in
     Printf.printf ">> Abs Syntax Tree II:\n%s\n"
       (String.concat "\n" (List.map AST.exp_to_string ast));
     let ast' = Infer.infer ast in
