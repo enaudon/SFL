@@ -29,7 +29,7 @@ let rec repl () =
     let ast' = Infer.infer ast in
     Printf.printf "  ----\n%s\n"
       (String.concat "\n" (List.map AST.exp_to_string ast'));
-    let ir = List.map IR.top_of_ast ast' in
+    let ir = List.map Ast_ir_trans.f ast' in
     Printf.printf ">> Internal Rep II:\n%s"
       (String.concat "" (List.map IR.top_to_string ir));
     let ll = LL.translate ir in

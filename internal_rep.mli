@@ -23,9 +23,6 @@ type top =
   | FunctionDecl of id * id list * exp * Type.t
   | Expression of exp
 
-val exp_of_ast : Abs_syntax_tree.exp -> exp
-val top_of_ast : Abs_syntax_tree.exp -> top
-
 val lit_to_string : lit -> string
 val exp_to_string : exp -> string
 val top_to_string : top -> string
