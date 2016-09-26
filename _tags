@@ -1,4 +1,5 @@
 <parse>:    include
 <static>:   include
 <llvm>:     include
+<util>:     include
 <.>:        include
