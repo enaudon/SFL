@@ -3,7 +3,7 @@
  *)
 
 
-type id = string
+type id = Ident.t
 
 type lit =
   | Boolean of bool
@@ -17,9 +17,9 @@ and exp =
   | Abstraction of id * Type.t * exp
   | Binding of id * Type.t * exp * exp
 
-let top_tag = Variable ""
+let top_tag = Variable (Ident.of_string "")
 
-module Env = Map.Make (String)
+module Env = Ident.Map
 
 let empty_env =
   let tp = Type.Function (
@@ -27,14 +27,16 @@ let empty_env =
     Type.Function (Type.Integer, Type.Integer)
   ) in
   List.fold_left
-    (fun acc id -> Env.add id tp acc)
+    (fun acc id -> Env.add (Ident.of_string id) tp acc)
     (Env.empty)
     ["+"; "-"; "*"; "/"; "%"]
 
 let tp_of_variable env id =
   try Env.find id env
   with Not_found ->
-    failwith (Printf.sprintf "Unbound variable \"%s\"" id)
+    failwith (
+      Printf.sprintf "Unbound variable \"%s\"" (Ident.to_string id)
+    )
 
 let tp_of_exp tpchk env e =
   let rec helper env e = match e with
@@ -87,7 +89,7 @@ let rec constrain_exp env exp = match exp with
       | Variable id ->
         Type.Variable
           (Type.TypeVariable.create
-            (Printf.sprintf "%s.ret" id))
+            (Printf.sprintf "%s.ret" (Ident.to_string id)))
       | _ ->
         Type.Variable (Type.TypeVariable.create "ret")
     in
@@ -132,12 +134,12 @@ let rec lit_to_string l = match l with
 
 and exp_to_string e =
   let paren e = match e with
-    | Variable x -> x
+    | Variable x -> Ident.to_string x
     | Literal l -> lit_to_string l
     | _ -> Printf.sprintf "(%s)" (exp_to_string e)
   in
   match e with
-    | Variable id -> id
+    | Variable id -> Ident.to_string id
     | Literal l -> lit_to_string l
     | Application (exp1, exp2) ->
       Printf.sprintf "%s %s"
@@ -145,12 +147,12 @@ and exp_to_string e =
         (paren exp2)
     | Abstraction (arg, tp, body) ->
       Printf.sprintf "%s : %s -> %s"
-        arg
+        (Ident.to_string arg)
         (Type.to_string tp)
         (exp_to_string body)
     | Binding (id, tp, value, exp) ->
       Printf.sprintf "let %s : %s = %s in %s"
-        id
+        (Ident.to_string id)
         (Type.to_string tp)
         (exp_to_string value)
         (exp_to_string exp)

@@ -2,7 +2,7 @@ module AST = Abs_syntax_tree
 module IR = Internal_rep
 
 
-let binop_of_string id = match id with
+let binop_of_string id = match (Ident.to_string id) with
   | "+" -> IR.Addition
   | "-" -> IR.Subtraction
   | "*" -> IR.Multiplication

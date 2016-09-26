@@ -1,4 +1,9 @@
-type id = string
+(*
+ *  Internal Representation
+ *)
+
+
+type id = Ident.t
 
 type binop =
   | Addition

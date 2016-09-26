@@ -1,6 +1,6 @@
 module IR = Internal_rep
 module LL = Llvm
-module StrMap = Map.Make (String)
+module StrMap = Ident.Map
 
 let llctx = LL.global_context ()
 let llmod = LL.create_module llctx "repl"
@@ -40,11 +40,11 @@ let rec exp_to_llvalue env ast = match ast with
       with Not_found ->
         failwith (Printf.sprintf
             "LlvmTrans.exp_to_llvalue: unknown variable \"%s\""
-            id
+            (Ident.to_string id)
         )
     end
   | IR.Application (id, args) ->
-    let fn = match LL.lookup_function id llmod with
+    let fn = match LL.lookup_function (Ident.to_string id) llmod with
       | Some fn -> fn
       | None ->
         failwith "LlvmTrans.exp_to_llvalue: IR.Application unknown function"
@@ -69,21 +69,23 @@ let rec typo_to_llvm tp = match tp with
 let top_to_llvalue llmod env top = match top with
   | IR.VariableDecl (id, exp) ->
     let exp' = exp_to_llvalue env exp in
-    let var = LL.define_global id exp' llmod in
+    let var = LL.define_global (Ident.to_string id) exp' llmod in
     StrMap.add id var env
   | IR.FunctionDecl (id, args, body, tp) ->
     (* Declaration *)
     let tp' = typo_to_llvm tp in
-    let fn = LL.define_function id tp' llmod in
+    let fn = LL.define_function (Ident.to_string id) tp' llmod in
     LL.position_at_end (LL.entry_block fn) llbld;
 
     (* Set up arguments *)
     let params = LL.params fn in
-    List.iteri (fun i id -> LL.set_value_name id params.(i)) args;
+    List.iteri
+      (fun i id -> LL.set_value_name id params.(i))
+      (List.map Ident.to_string args);
     let env' = Array.fold_left
       (
         fun env arg ->
-          let id = LL.value_name arg in
+          let id = Ident.of_string (LL.value_name arg) in
           StrMap.add id arg env
       )
       env
