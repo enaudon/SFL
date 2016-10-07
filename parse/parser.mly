@@ -59,13 +59,14 @@ literal:
 exp:
   | literal %prec LITERAL { PT.Literal ($1) }
   | VAR               { PT.Variable $1 }
-  | exp PLUS exp      { PT.BinaryOperation (PT.Addition, $1, $3) }
-  | exp MINUS exp     { PT.BinaryOperation (PT.Subtraction, $1, $3) }
-  | exp ASTERIK exp   { PT.BinaryOperation (PT.Multiplication, $1, $3) }
+  | exp PLUS exp      { PT.BinaryOperation (Primative.Addition, $1, $3) }
+  | exp MINUS exp     { PT.BinaryOperation (Primative.Subtraction, $1, $3) }
+  | exp ASTERIK exp
+    { PT.BinaryOperation (Primative.Multiplication, $1, $3) }
   | literal exp %prec ASTERIK
-    { PT.BinaryOperation (PT.Multiplication, PT.Literal $1, $2) }
-  | exp FSLASH exp    { PT.BinaryOperation (PT.Division, $1, $3) }
-  | exp PERCENT exp   { PT.BinaryOperation (PT.Modulo, $1, $3) }
+    { PT.BinaryOperation (Primative.Multiplication, PT.Literal $1, $2) }
+  | exp FSLASH exp    { PT.BinaryOperation (Primative.Division, $1, $3) }
+  | exp PERCENT exp   { PT.BinaryOperation (Primative.Modulo, $1, $3) }
   | exp exp %prec APP       { PT.Application ($1, $2) }
   | VAR IMP exp %prec ABS   { PT.Abstraction ($1, $3) }
   | LET binding_list IN exp %prec LET   { PT.Binding (List.rev $2, $4) }

@@ -21,16 +21,6 @@ let top_tag = Variable (Ident.of_string "")
 
 module Env = Ident.Map
 
-let empty_env =
-  let tp = Type.Function (
-    Type.Integer,
-    Type.Function (Type.Integer, Type.Integer)
-  ) in
-  List.fold_left
-    (fun acc id -> Env.add (Ident.of_string id) tp acc)
-    (Env.empty)
-    ["+"; "-"; "*"; "/"; "%"]
-
 let tp_of_variable env id =
   try Env.find id env
   with Not_found ->
@@ -123,7 +113,7 @@ let rec constrain_top
       in
       cs @ constrain_top env' es
 
-let constrain exp = constrain_top empty_env exp
+let constrain exp = constrain_top Primative.tp_env exp
 
 let rec lit_to_string l = match l with
   | Boolean b -> string_of_bool b

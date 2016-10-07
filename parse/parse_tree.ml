@@ -4,13 +4,6 @@
 
 type id = string
 
-type binop =
-  | Addition
-  | Subtraction
-  | Multiplication
-  | Division
-  | Modulo
-
 type lit =
   | Boolean of bool
   | Integer of int
@@ -19,7 +12,7 @@ type lit =
 and exp =
   | Variable of id
   | Literal of lit
-  | BinaryOperation of binop * exp * exp
+  | BinaryOperation of Primative.binop * exp * exp
   | Application of exp * exp
   | Abstraction of id * exp
   | Binding of (id * exp) list * exp
@@ -27,13 +20,6 @@ and exp =
 type top =
   | Declaration of exp * exp
   | Expression of exp
-
-let binop_to_string op = match op with
-  | Addition -> "+"
-  | Subtraction -> "-"
-  | Multiplication -> "*"
-  | Division -> "/"
-  | Modulo -> "%"
 
 let rec lit_to_string (l : lit) : string = match l with
   | Boolean b -> string_of_bool b
@@ -55,7 +41,7 @@ and exp_to_string pt =
     | BinaryOperation (op, pt1, pt2) ->
       Printf.sprintf "%s %s %s"
         (exp_to_string pt1)
-        (binop_to_string op)
+        (Primative.binop_to_string op)
         (exp_to_string pt2)
     | Application (pt1, pt2) ->
       Printf.sprintf "%s %s" (paren pt1) (exp_to_string pt2)

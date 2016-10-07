@@ -17,7 +17,7 @@ and exp_to_ast env exp = match exp with
   | PT.BinaryOperation (op, e1, e2) ->
     exp_to_ast env (
       PT.Application (
-        PT.Application (PT.Variable (PT.binop_to_string op), e1),
+        PT.Application (PT.Variable (Primative.binop_to_string op), e1),
         e2
       )
     )
@@ -63,11 +63,12 @@ let rec top_to_ast env exps = match exps with
           let fn_tp = Type.Function (arg_tp, ret_tp) in
           let fn = AST.Abstraction (arg', arg_tp, body) in
           let env' = Env.add id' fn_tp env in
-          AST.Binding (id', fn_tp, fn, AST.top_tag) :: top_to_ast env' tl
+          AST.Binding (id', fn_tp, fn, AST.top_tag)
+          :: top_to_ast env' tl
         | _ ->
           failwith "Expected a variable or function declaration"
       end
       | PT.Expression exp ->
         exp_to_ast env exp :: top_to_ast env tl
 
-let f = top_to_ast AST.empty_env
+let f = top_to_ast Primative.tp_env

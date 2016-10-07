@@ -5,13 +5,6 @@
 
 type id = Ident.t
 
-type binop =
-  | Addition
-  | Subtraction
-  | Multiplication
-  | Division
-  | Modulo
-
 type lit =
   | Boolean of bool
   | Integer of int
@@ -19,7 +12,7 @@ type lit =
 type exp =
   | Literal of lit
   | Variable of id
-  | BinaryOperation of binop * exp * exp
+  | BinaryOperation of Primative.binop * exp * exp
   | Application of id * exp list
   | Binding of id * exp * exp
 

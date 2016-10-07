@@ -2,14 +2,6 @@ module AST = Abs_syntax_tree
 module IR = Internal_rep
 
 
-let binop_of_string id = match (Ident.to_string id) with
-  | "+" -> IR.Addition
-  | "-" -> IR.Subtraction
-  | "*" -> IR.Multiplication
-  | "/" -> IR.Division
-  | "%" -> IR.Modulo
-  | _ -> failwith "unsupported binary operation"
-
 let lit_of_ast l = match l with
   | AST.Integer i -> IR.Integer i
   | AST.Boolean b -> IR.Boolean b
@@ -17,7 +9,7 @@ let lit_of_ast l = match l with
 
 let exp_of_ast_app id args =
   try
-    let op = binop_of_string id in
+    let op = Primative.binop_of_string (Ident.to_string id) in
     match args with
       | [rhs; lhs] -> IR.BinaryOperation (op, rhs, lhs)
       | _ -> failwith "IR.exp_of_ast_app: invalid arguments to binop"

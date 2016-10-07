@@ -12,14 +12,6 @@
 (** Variable names. *)
 type id = string
 
-(** The type of binary operations *)
-type binop =
-  | Addition
-  | Subtraction
-  | Multiplication
-  | Division
-  | Modulo
-
 (** The type of literal values. *)
 type lit =
   | Boolean of bool
@@ -30,7 +22,7 @@ type lit =
 and exp =
   | Variable of id
   | Literal of lit
-  | BinaryOperation of binop * exp * exp
+  | BinaryOperation of Primative.binop * exp * exp
   | Application of exp * exp
   | Abstraction of id * exp
   | Binding of (id * exp) list * exp
@@ -41,9 +33,6 @@ type top =
   | Expression of exp
 
 (** {2 Functions} *)
-
-(** Returns the string representation of a binary operator. *)
-val binop_to_string : binop -> string
 
 (** Returns the string representation of an expression. *)
 val exp_to_string : exp -> string

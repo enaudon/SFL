@@ -19,11 +19,11 @@ let literal_to_llvm l = match l with
 
 let binop_to_llvm d (op, e1, e2) =
   let llval_builder = match op with
-    | IR.Addition -> LL.build_add e1 e2
-    | IR.Subtraction -> LL.build_sub e1 e2
-    | IR.Multiplication -> LL.build_mul e1 e2
-    | IR.Division -> LL.build_sdiv e1 e2
-    | IR.Modulo -> LL.build_srem e1 e2
+    | Primative.Addition -> LL.build_add e1 e2
+    | Primative.Subtraction -> LL.build_sub e1 e2
+    | Primative.Multiplication -> LL.build_mul e1 e2
+    | Primative.Division -> LL.build_sdiv e1 e2
+    | Primative.Modulo -> LL.build_srem e1 e2
   in llval_builder d llbld
 
 let rec exp_to_llvalue env ast = match ast with

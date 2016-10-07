@@ -25,8 +25,6 @@ and exp =
   | Abstraction of id * Type.t * exp
   | Binding of id * Type.t * exp * exp
 
-val empty_env : Type.t Ident.Map.t
-
 (** Creates a tag expression for top-level bindings *)
 val top_tag : exp
 
