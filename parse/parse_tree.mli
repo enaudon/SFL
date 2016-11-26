@@ -9,16 +9,15 @@
 
 (** {2 Types} *)
 
-(** Variable names. *)
 type id = string
+(** Identifiers for variables, function arguments, and bindings. *)
 
-(** The type of literal values. *)
 type lit =
   | Boolean of bool
   | Integer of int
   | Tuple of exp list
+(** Literal values. *)
 
-(** The type of parse tree expressions. *)
 and exp =
   | Variable of id
   | Literal of lit
@@ -26,16 +25,30 @@ and exp =
   | Application of exp * exp
   | Abstraction of id * exp
   | Binding of (id * exp) list * exp
+(** Parse tree expressions. *)
 
-(** The type of the parse tree top level. *)
 type top =
   | Declaration of exp * exp
   | Expression of exp
+(** Parse tree top-level statements. *)
 
-(** {2 Functions} *)
 
-(** Returns the string representation of an expression. *)
+(** {2 String functions} *)
+
+val lit_to_string : lit -> string
+(**
+  [lit_to_string lit] computes the string representation for the literal
+  [lit].
+*)
+
 val exp_to_string : exp -> string
+(**
+  [exp_to_string exp] computes the string representation for the
+  expression [exp].
+*)
 
-(** Returns the string representation of a top-level expression. *)
 val top_to_string : top -> string
+(**
+  [top_to_string top] computes the string representation for the
+  top-level statement [top].
+*)

@@ -6,6 +6,8 @@
  *)
 
 
+(** {2 Types} *)
+
 type id = Ident.t
 (** Identifiers for variables, function arguments, and bindings. *)
 
@@ -21,10 +23,13 @@ and exp =
   | Application of exp * exp
   | Abstraction of id * Type.t * exp
   | Binding of id * Type.t * exp * exp
-(** The type of abstract syntax tree expressions.  *)
+(** Abstract syntax tree expressions.  *)
 
 val top_tag : exp
 (** A tag for top-level bindings. *)
+
+
+(** {2 Type functions} *)
 
 val to_type : Type.t Ident.Map.t -> exp -> Type.t
 (**
@@ -39,8 +44,14 @@ val typecheck : Type.t Ident.Map.t -> exp -> Type.t
   [env], or throws an exception if [exp] is not well-typed.
 *)
 
-(** Type checks an expression. *)
 val constrain : exp list -> (Type.t * Type.t) list
+(**
+  [constrain es] computes the type constraints that would need to be
+  satisfied for [es] to be well-typed.
+*)
+
+
+(** {2 String functions} *)
 
 val lit_to_string : lit -> string
 (**
