@@ -21,16 +21,18 @@ let rec repl () =
     Printf.printf ">> Parse Tree:\n%s"
       (String.concat "" (List.map PT.top_to_string pt));
 
-    (* New pathway *)
     let ast = Pt_ast_trans.f pt in
     Printf.printf ">> Abs Syntax Tree II:\n%s\n"
       (String.concat "\n" (List.map AST.exp_to_string ast));
+
     let ast' = Infer.infer ast in
     Printf.printf "  ----\n%s\n"
       (String.concat "\n" (List.map AST.exp_to_string ast'));
+
     let ir = List.map Ast_ir_trans.f ast' in
     Printf.printf ">> Internal Rep II:\n%s"
       (String.concat "" (List.map IR.top_to_string ir));
+
     let ll = Ir_llvm_trans.f ir in
     Printf.printf ">> LLVM II:\n%s" (Llvm.string_of_llmodule ll);
 

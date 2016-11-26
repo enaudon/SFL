@@ -6,35 +6,50 @@
  *)
 
 
-(** Variable names. *)
 type id = Ident.t
+(** Identifiers for variables, function arguments, and bindings. *)
 
-(** The type of literal values. *)
 type lit =
   | Boolean of bool
   | Integer of int
   | Tuple of exp list
+(** The type of literal values. *)
 
-(** The type of abstract syntax trees of type ['a].  An abstact syntax
-    tree carries data at each node.
- *)
 and exp =
   | Variable of id
   | Literal of lit
   | Application of exp * exp
   | Abstraction of id * Type.t * exp
   | Binding of id * Type.t * exp * exp
+(** The type of abstract syntax tree expressions.  *)
 
-(** Creates a tag expression for top-level bindings *)
 val top_tag : exp
+(** A tag for top-level bindings. *)
 
-(** Computes the type of an expression *)
 val to_type : Type.t Ident.Map.t -> exp -> Type.t
+(**
+  [to_type env exp] computes the type of [exp] under the environment
+  [env], assuming all function applications are well-typed (i.e. the
+  actual argument type matches the expected type).
+*)
 
-(** Type checks an expression *)
 val typecheck : Type.t Ident.Map.t -> exp -> Type.t
+(**
+  [typecheck env exp] computes the type of [exp] under the environment
+  [env], or throws an exception if [exp] is not well-typed.
+*)
 
+(** Type checks an expression. *)
 val constrain : exp list -> (Type.t * Type.t) list
 
 val lit_to_string : lit -> string
+(**
+  [lit_to_string lit] computes the string representation for the literal
+  [lit].
+*)
+
 val exp_to_string : exp -> string
+(**
+  [exp_to_string exp] computes the string representation for the
+  expression [exp].
+*)

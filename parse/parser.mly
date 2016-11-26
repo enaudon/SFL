@@ -25,13 +25,13 @@ let error msg nterm =
 %token <int> INTEGER
 %token EOL EOF
 
-%nonassoc LET
-%nonassoc APP ABS
+%nonassoc LET ABS
 %nonassoc LITERAL
 %nonassoc VAR BOOLEAN INTEGER
-%nonassoc LPAREN RPAREN
 %left PLUS MINUS
 %left ASTERIK FSLASH PERCENT
+%nonassoc LPAREN RPAREN
+%left APP
 
 %start top_list
 %type <Parse_tree.top list> top_list

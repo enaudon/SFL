@@ -115,34 +115,62 @@ let rec constrain_top
 
 let constrain exp = constrain_top Primative.tp_env exp
 
-let rec lit_to_string l = match l with
-  | Boolean b -> string_of_bool b
-  | Integer i -> string_of_int i
+let rec format_lit ff l = match l with
+  | Boolean b -> Format.fprintf ff "%b" b
+  | Integer i -> Format.fprintf ff "%i" i
   | Tuple es ->
-    Printf.sprintf "(%s)"
-      (String.concat ", " (List.map exp_to_string es))
+    let rec format_list fmt ff = function
+      | [] -> ()
+      | [v] -> Format.fprintf ff "%a" fmt v
+      | v::tl -> Format.fprintf ff "%a,@ %a" fmt v (format_list fmt) tl
+    in
+    Format.fprintf ff "(%a)" (format_list format_exp) es
 
-and exp_to_string e =
-  let paren e = match e with
-    | Variable x -> Ident.to_string x
-    | Literal l -> lit_to_string l
-    | _ -> Printf.sprintf "(%s)" (exp_to_string e)
+and format_exp ff e =
+  let paren ff e = match e with
+    | Variable _
+    | Literal _ -> format_exp ff e
+    | _ -> Format.fprintf ff "(%a)" format_exp e
   in
   match e with
-    | Variable id -> Ident.to_string id
-    | Literal l -> lit_to_string l
-    | Application (exp1, exp2) ->
-      Printf.sprintf "%s %s"
-        (paren exp1)
-        (paren exp2)
-    | Abstraction (arg, tp, body) ->
-      Printf.sprintf "%s : %s -> %s"
-        (Ident.to_string arg)
-        (Type.to_string tp)
-        (exp_to_string body)
-    | Binding (id, tp, value, exp) ->
-      Printf.sprintf "let %s : %s = %s in %s"
-        (Ident.to_string id)
-        (Type.to_string tp)
-        (exp_to_string value)
-        (exp_to_string exp)
+    | Variable id -> Format.fprintf ff "%s" (Ident.to_string id)
+    | Literal l -> format_lit ff l
+    | Application _ ->
+      let rec format_app ff exp = match exp with
+        | Application (fn, arg) ->
+          Format.fprintf ff "%a@ %a" format_app fn paren arg
+        | _ -> paren ff exp
+      in
+      Format.fprintf ff "@[<hv 2>%a@]" format_app e
+    (* TODO: fix odd box opening/closing here--deets in comments *)
+    | Abstraction _ ->
+      let rec format_abs ff exp = match exp with
+        | Abstraction (arg, tp, body) ->
+          let formatter = match body with
+            | Abstraction _ -> Format.fprintf ff "%s : %s ->@ %a"
+            | _ -> Format.fprintf ff "%s : %s ->%a"
+          in
+          formatter
+            (Ident.to_string arg)
+            (Type.to_string tp)
+            format_abs body
+        (* The unmatched close closes the box below *)
+        | _ -> Format.fprintf ff "@]@ %a" format_exp exp
+      in
+      (* The second box here (hov 2) is closed in the %a.  See above. *)
+      Format.fprintf ff "@[<hv 2>@[<hov 2>%a@]" format_abs e
+    | Binding _ ->
+      let rec format_bind ff exp = match exp with
+        | Binding (id, tp, value, exp) ->
+          Format.fprintf ff
+            "@[<hv 0>@[<hv 2>let %s : %s =@ %a@]@ in@]@ %a"
+            (Ident.to_string id)
+            (Type.to_string tp)
+            format_exp value
+            format_bind exp
+        | _ -> format_exp ff exp
+      in
+      Format.fprintf ff "@[<hv 0>%a@]" format_bind e
+
+let lit_to_string = Format.asprintf "%a" format_lit
+let exp_to_string = Format.asprintf "%a" format_exp
