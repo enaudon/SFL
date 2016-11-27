@@ -18,7 +18,7 @@ let rec repl () =
   if input = "" then () else
   try
     let pt = parse input in
-    Printf.printf ">> Parse Tree:\n%s"
+    Printf.printf ">> Parse Tree:\n%s\n"
       (String.concat "" (List.map PT.top_to_string pt));
 
     let ast = Pt_ast_trans.f pt in

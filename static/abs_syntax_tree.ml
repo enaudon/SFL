@@ -126,13 +126,13 @@ let rec format_lit ff l = match l with
     in
     Format.fprintf ff "(%a)" (format_list format_exp) es
 
-and format_exp ff e =
-  let paren ff e = match e with
+and format_exp ff exp =
+  let paren ff exp = match exp with
     | Variable _
-    | Literal _ -> format_exp ff e
-    | _ -> Format.fprintf ff "(%a)" format_exp e
+    | Literal _ -> format_exp ff exp
+    | _ -> Format.fprintf ff "(%a)" format_exp exp
   in
-  match e with
+  match exp with
     | Variable id -> Format.fprintf ff "%s" (Ident.to_string id)
     | Literal l -> format_lit ff l
     | Application _ ->
@@ -141,7 +141,7 @@ and format_exp ff e =
           Format.fprintf ff "%a@ %a" format_app fn paren arg
         | _ -> paren ff exp
       in
-      Format.fprintf ff "@[<hv 2>%a@]" format_app e
+      Format.fprintf ff "@[<hv 2>%a@]" format_app exp
     (* TODO: fix odd box opening/closing here--deets in comments *)
     | Abstraction _ ->
       let rec format_abs ff exp = match exp with
@@ -158,7 +158,7 @@ and format_exp ff e =
         | _ -> Format.fprintf ff "@]@ %a" format_exp exp
       in
       (* The second box here (hov 2) is closed in the %a.  See above. *)
-      Format.fprintf ff "@[<hv 2>@[<hov 2>%a@]" format_abs e
+      Format.fprintf ff "@[<hv 2>@[<hov 2>%a@]" format_abs exp
     | Binding _ ->
       let rec format_bind ff exp = match exp with
         | Binding (id, tp, value, exp) ->
@@ -170,7 +170,7 @@ and format_exp ff e =
             format_bind exp
         | _ -> format_exp ff exp
       in
-      Format.fprintf ff "@[<hv 0>%a@]" format_bind e
+      Format.fprintf ff "@[<hv 0>%a@]" format_bind exp
 
 let lit_to_string = Format.asprintf "%a" format_lit
 let exp_to_string = Format.asprintf "%a" format_exp
