@@ -4,7 +4,7 @@ module Env = Ident.Map
 
 let val_env =
   let eval_prim op =
-      Value.Primative ( fun lhs -> Value.Primative ( fun rhs ->
+      Value.Function ( fun lhs -> Value.Function ( fun rhs ->
         match lhs, rhs with
           | Value.Integer i1, Value.Integer i2 ->
             Value.Integer (op i1 i2)
@@ -37,21 +37,21 @@ let eval_var env id =
         (Ident.to_string id)
     )
 
-let rec eval_app env fn arg =
-  let arg' = eval_exp env arg in
-  match eval_exp env fn with
-    | V.Function (env, id, body) ->
-      let env' = Env.add id arg' env in
-      eval_exp env' body
-    | V.Primative p -> p arg'
-    | _ -> failwith "Value.eval_exp: Cannot apply non-function value"
+let rec eval_app env id body arg =
+  let env' = Env.add id arg env in
+  eval_exp env' body
 
 and eval_exp env exp = match exp with
   | AST.Literal l -> eval_lit l
   | AST.Variable id -> eval_var env id
-  | AST.Application (fn, arg) -> eval_app env fn arg
-  | AST.Abstraction (arg, _, body) ->
-    V.Function (env, arg, body)
+  | AST.Application (fn, arg) ->
+    let arg' = eval_exp env arg in
+    begin match eval_exp env fn with
+      | V.Function fn' -> fn' arg'
+      | _ -> failwith "Value.eval_exp: Cannot apply non-function value"
+    end
+  | AST.Abstraction (id, _, body) ->
+    V.Function (eval_app env id body)
   | AST.Binding (id, _, value, exp) ->
     let value' = eval_exp env value in
     let env' = Env.add id value' env in

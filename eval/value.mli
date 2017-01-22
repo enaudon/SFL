@@ -7,7 +7,6 @@
 type t =
   | Boolean of bool
   | Integer of int
-  | Primative of (t -> t)
-  | Function of t Ident.Map.t * Ident.t * Abs_syntax_tree.exp
+  | Function of (t -> t)
 
 val to_string : t -> string
