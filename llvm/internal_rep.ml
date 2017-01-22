@@ -16,39 +16,49 @@ type top =
   | FunctionDecl of id * id list * exp * Type.t
   | Expression of exp
 
-let lit_to_string l = match l with
-  | Boolean b -> string_of_bool b
-  | Integer i -> string_of_int i
+let format_lit ff l = match l with
+  | Boolean b -> Format.fprintf ff "%b" b
+  | Integer i -> Format.fprintf ff "%i" i
 
-let rec exp_to_string exp = match exp with
-  | Literal l -> lit_to_string l
-  | Variable id -> Ident.to_string id
+let rec format_exp ff exp = match exp with
+  | Literal l -> format_lit ff l
+  | Variable id -> Format.fprintf ff "%s" (Ident.to_string id)
   | BinaryOperation (op, lhs, rhs) ->
-    Printf.sprintf "%s %s %s"
-      (exp_to_string lhs)
+    Format.fprintf ff "@[<hov 2>%a %s@ %a@]"
+      format_exp lhs
       (Primative.binop_to_string op)
-      (exp_to_string rhs)
-  | Application (id, args) ->
-    let args' = List.map exp_to_string args in
-    Printf.sprintf "%s(%s)"
-      (Ident.to_string id)
-      (String.concat ", " args')
+      format_exp rhs
   | Binding (id, value, exp) ->
-    Printf.sprintf "let %s = %s in %s"
+    Format.fprintf ff
+      "@[<hv 0>@[<hv 0>@[<hv 2>let %s =@ %a@]@ in@]@ %a@]"
       (Ident.to_string id)
-      (exp_to_string value)
-      (exp_to_string exp)
+      format_exp value
+      format_exp exp
+  | Application (id, args) ->
+    let format_app ff arg = Format.fprintf ff "%a" format_exp arg in
+    let pp_sep ff () = Format.fprintf ff ",@ " in
+    Format.fprintf ff "@[<hv 2>%s(@,%a@]@,)"
+      (Ident.to_string id)
+      (Format_util.format_list pp_sep format_app) args
 
-let top_to_string top = match top with
+let format_top ff top = match top with
   | VariableDecl (id, exp) ->
-    Printf.sprintf "%s = %s\n"
+    Format.fprintf ff "@[<hv 2>%s =@ %a@]\n"
       (Ident.to_string id)
-      (exp_to_string exp)
+      format_exp exp
   | FunctionDecl (id, args, body, tp) ->
-    Printf.sprintf "%s : %s (%s) = %s\n"
+    let format_app ff arg =
+      Format.fprintf ff "%s" (Ident.to_string arg)
+    in
+    let pp_sep ff () = Format.fprintf ff ",@ " in
+    Format.fprintf ff "@[<hv 2>%s : %s (%a) = %a@]\n"
       (Ident.to_string id)
       (Type.to_string tp)
-      (String.concat ", " (List.map Ident.to_string args))
-      (exp_to_string body)
+      (Format_util.format_list pp_sep format_app) args
+      format_exp body
   | Expression (exp) ->
-    Printf.sprintf "%s\n" (exp_to_string exp)
+    Format.fprintf ff "%a\n" format_exp exp
+
+let lit_to_string = Format.asprintf "%a" format_lit
+let exp_to_string = Format.asprintf "%a" format_exp
+let top_to_string = Format.asprintf "%a" format_top

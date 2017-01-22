@@ -119,12 +119,9 @@ let rec format_lit ff l = match l with
   | Boolean b -> Format.fprintf ff "%b" b
   | Integer i -> Format.fprintf ff "%i" i
   | Tuple es ->
-    let rec format_list fmt ff = function
-      | [] -> ()
-      | [v] -> Format.fprintf ff "%a" fmt v
-      | v::tl -> Format.fprintf ff "%a,@ %a" fmt v (format_list fmt) tl
-    in
-    Format.fprintf ff "(%a)" (format_list format_exp) es
+    let pp_sep ff () = Format.fprintf ff ",@ " in
+    Format.fprintf ff "(%a)"
+      (Format_util.format_list pp_sep format_exp) es
 
 and format_exp ff exp =
   let paren ff exp = match exp with

@@ -21,21 +21,14 @@ type top =
   | Declaration of exp * exp
   | Expression of exp
 
-let rec format_list pp_sep fmt ff = function
-  | [] -> ()
-  | [v] -> Format.fprintf ff "%a" fmt v
-  | v :: tl ->
-    Format.fprintf ff "%a%a%a"
-      fmt v
-      pp_sep ()
-      (format_list pp_sep fmt) tl
-
 let rec format_lit ff l = match l with
   | Boolean b -> Format.fprintf ff "%b" b
   | Integer i -> Format.fprintf ff "%i" i
   | Tuple es ->
     let pp_sep ff () = Format.fprintf ff ",@ " in
-    Format.fprintf ff "(%a)" (format_list pp_sep format_exp) es
+    Format.fprintf ff "(%a)"
+      (Format_util.format_list pp_sep format_exp)
+      es
 
 and format_exp ff exp =
   let paren ff e = match e with
@@ -44,8 +37,8 @@ and format_exp ff exp =
     | _ -> Format.fprintf ff "(%a)" format_exp e
   in
   match exp with
-    | Variable id -> Format.fprintf ff "%s" id
     | Literal l -> format_lit ff l
+    | Variable id -> Format.fprintf ff "%s" id
     | BinaryOperation (op, lhs, rhs) ->
       Format.fprintf ff "@[<hov 2>%a %s@ %a@]"
         format_exp lhs
@@ -79,7 +72,7 @@ and format_exp ff exp =
       let pp_sep ff () = Format.fprintf ff ";@ " in
       Format.fprintf ff
         "@[<hv 0>@[<hv 0>@[<hv 2>let@ %a@]@ in@]@ %a@]"
-        (format_list pp_sep format_bind) binds
+        (Format_util.format_list pp_sep format_bind) binds
         format_exp exp
 
 let format_top ff top = match top with
