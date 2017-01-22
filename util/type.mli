@@ -1,5 +1,5 @@
 (**
-    Types for our abstract syntax treeand associated functions.
+ *  Types.
  *)
 
 

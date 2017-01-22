@@ -18,8 +18,8 @@ type lit =
 (** The type of literal values. *)
 
 and exp =
-  | Variable of id
   | Literal of lit
+  | Variable of id
   | Application of exp * exp
   | Abstraction of id * Type.t * exp
   | Binding of id * Type.t * exp * exp

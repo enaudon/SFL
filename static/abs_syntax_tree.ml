@@ -11,8 +11,8 @@ type lit =
   | Tuple of exp list
 
 and exp =
-  | Variable of id
   | Literal of lit
+  | Variable of id
   | Application of exp * exp
   | Abstraction of id * Type.t * exp
   | Binding of id * Type.t * exp * exp
@@ -30,13 +30,13 @@ let tp_of_variable env id =
 
 let tp_of_exp tpchk env e =
   let rec helper env e = match e with
-    | Variable id -> tp_of_variable env id
     | Literal l ->
       begin match l with
         | Boolean _ -> Type.Boolean
         | Integer _ -> Type.Integer
         | Tuple es -> Type.Tuple (List.map (helper env) es)
       end
+    | Variable id -> tp_of_variable env id
     | Application (fn, arg) ->
       begin match helper env fn with
         | Type.Function (arg_tp, ret_tp) ->
