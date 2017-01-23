@@ -32,6 +32,7 @@ module TV = TypeVariable
 
 
 type t =
+  | Unit
   | Boolean
   | Integer
   | Variable of TV.t
@@ -39,6 +40,8 @@ type t =
   | Tuple of t list
 
 let rec to_string tp = match tp with
+  | Unit ->
+    Printf.sprintf "Unit"
   | Boolean ->
     Printf.sprintf "Boolean"
   | Integer ->

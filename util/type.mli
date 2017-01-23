@@ -41,6 +41,7 @@ end
 
 (** The type of types. *)
 type t =
+  | Unit
   | Boolean
   | Integer
   | Variable of TypeVariable.t

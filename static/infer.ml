@@ -5,6 +5,7 @@
 
 module AST = Abs_syntax_tree
 
+let unit_id = Unify.Identifier.fresh ()
 let boolean_id = Unify.Identifier.fresh ()
 let integer_id = Unify.Identifier.fresh ()
 let tuple_id = Unify.Identifier.fresh ()
@@ -31,6 +32,7 @@ let find_tm tv =
     tm
 
 let rec term_of_typo tp = match tp with
+  | Type.Unit -> Unify.constant unit_id
   | Type.Boolean -> Unify.constant boolean_id
   | Type.Integer -> Unify.constant integer_id
   | Type.Variable id ->
@@ -47,6 +49,8 @@ let rec typo_of_term t = match t with
   | Unify.Variable (id) -> Type.Variable (find_tv id)
   | Unify.Function (id, terms) ->
     begin match id with
+      | _ when id = unit_id -> 
+        Type.Unit
       | _ when id = boolean_id -> 
         Type.Boolean
       | _ when id = integer_id -> 

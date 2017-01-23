@@ -57,4 +57,16 @@ and eval_exp env exp = match exp with
     let env' = Env.add id value' env in
     eval_exp env' exp
 
-let f = eval_exp val_env
+let eval_top env0 top =
+  let helper (env, vs) top = match top with
+    | AST.Binding (id, _, value, exp) when exp = AST.top_tag ->
+      let value' = eval_exp env value in
+      let env' = Env.add id value' env in
+      env', value' :: vs
+    | _ ->
+      env, (eval_exp env top) :: vs
+  in
+  let _, vs = List.fold_left helper (env0, []) top in
+  vs
+
+let f = eval_top val_env

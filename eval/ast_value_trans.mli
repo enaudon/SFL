@@ -1,1 +1,1 @@
-val f : Abs_syntax_tree.exp -> Value.t
+val f : Abs_syntax_tree.exp list -> Value.t list

@@ -58,6 +58,25 @@ let tp_of_exp tpchk env e =
 let to_type = tp_of_exp false
 let typecheck = tp_of_exp true
 
+let to_type_list env0 es =
+  let helper (env, tps) exp = match exp with
+    | Binding (id, tp, _, exp) when exp = top_tag ->
+      let env' = Ident.Map.add id tp env in
+      (env', tp :: tps)
+    | _ ->
+      let tp = to_type env exp in
+      (env, tp :: tps)
+  in
+  let _, ts = List.fold_left helper (env0, []) es in
+  ts
+
+let to_ident_list es =
+  let helper exp = match exp with
+    | Binding (id, _, _, exp) when exp = top_tag -> id
+    | _ -> Ident.of_string "_"
+  in
+  List.map helper es
+
 let rec constrain_exp env exp = match exp with
   | Variable id ->
     let tp = tp_of_variable env id in

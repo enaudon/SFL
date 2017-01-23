@@ -34,8 +34,21 @@ val top_tag : exp
 val to_type : Type.t Ident.Map.t -> exp -> Type.t
 (**
   [to_type env exp] computes the type of [exp] under the environment
-  [env], assuming all function applications are well-typed (i.e. the
-  actual argument type matches the expected type).
+  [env], assuming all function applications and identifier bindings are
+  well-typed (i.e. the actual type of the argument or bound-value
+  matches it's expected type).
+*)
+
+val to_type_list : Type.t Ident.Map.t -> exp list -> Type.t list
+(**
+  As [to_type], except that [to_type_list] expects a list of expressions
+  and returns a list of their types.
+*)
+
+val to_ident_list : exp list -> id list
+(**
+  As [to_type], except that [to_type_list] expects a list of expressions
+  and returns a list of their types.
 *)
 
 val typecheck : Type.t Ident.Map.t -> exp -> Type.t

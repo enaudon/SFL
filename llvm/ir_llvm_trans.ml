@@ -57,14 +57,17 @@ let rec exp_to_llvalue env ast = match ast with
     exp_to_llvalue env' exp
 
 let rec typo_to_llvm tp = match tp with
+  | Type.Unit -> failwith "Ir_llvm_trans.typo_to_llvm: unit not implemented"
   | Type.Boolean -> bool_type
   | Type.Integer -> int_type
-  | Type.Variable _ -> failwith "Type.Variable not implemented"
+  | Type.Variable _ ->
+    failwith "Ir_llvm_trans.typo_to_llvm: variable not implemented"
   | Type.Function (arg_tp, ret_tp) ->
     let arg_tp' = typo_to_llvm arg_tp in
     let ret_tp' = typo_to_llvm ret_tp in
     LL.function_type ret_tp' (Array.make 1 arg_tp')
-  | Type.Tuple _ -> failwith "Type.Tuple not implemented"
+  | Type.Tuple _ ->
+    failwith "Ir_llvm_trans.typo_to_llvm: tuple not implemented"
 
 let top_to_llvalue llmod env top = match top with
   | IR.VariableDecl (id, exp) ->
