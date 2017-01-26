@@ -4,7 +4,7 @@
     The parse tree is a faithful tree-form representation of the source
     code.  No desugaring has been done, except that parenthesis are
     implicit. Types have not yet been infered.
- *)
+ **)
 
 
 (** {2 Types} *)

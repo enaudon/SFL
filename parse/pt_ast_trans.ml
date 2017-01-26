@@ -87,7 +87,11 @@ let rec top_to_ast env exps = match exps with
           AST.Binding (id', fn_tp, fn, AST.top_tag)
           :: top_to_ast env' tl
         | _ ->
-          failwith "Expected a variable or function declaration"
+          failwith (
+            Printf.sprintf
+              "%s: expected a variable or function declaration"
+              (Position.to_string lhs.PT.exp_pos)
+          )
       end
       | PT.Expression exp ->
         exp_to_ast env exp :: top_to_ast env tl
