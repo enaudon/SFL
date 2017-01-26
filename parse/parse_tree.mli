@@ -12,13 +12,19 @@
 type id = string
 (** Identifiers for variables, function arguments, and bindings. *)
 
-type lit =
+type lit_desc =
   | Boolean of bool
   | Integer of int
   | Tuple of exp list
 (** Literal values. *)
 
-and exp =
+and lit = {
+  lit_desc : lit_desc ;
+  lit_pos : Position.t ;
+}
+(** Literals, along with meta-data. *)
+
+and exp_desc =
   | Variable of id
   | Literal of lit
   | BinaryOperation of Primative.binop * exp * exp
@@ -27,10 +33,22 @@ and exp =
   | Binding of (id * exp) list * exp
 (** Parse tree expressions. *)
 
-type top =
+and exp = {
+  exp_desc : exp_desc ;
+  exp_pos : Position.t ;
+}
+(** Expressions, along with meta-data. *)
+
+type top_desc =
   | Declaration of exp * exp
   | Expression of exp
-(** Parse tree top-level statements. *)
+(** Top-level expressions. *)
+
+type top = {
+  top_desc : top_desc ;
+  top_pos : Position.t ;
+}
+(** Top-level expressions, along with meta-data. *)
 
 
 (** {2 String functions} *)

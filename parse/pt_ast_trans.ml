@@ -2,25 +2,43 @@ module AST = Abs_syntax_tree
 module PT = Parse_tree
 module Env = Ident.Map
 
-let rec lit_to_ast env lit = match lit with
+let rec lit_to_ast env lit = match lit.PT.lit_desc with
   | PT.Boolean b -> AST.Boolean b
   | PT.Integer i -> AST.Integer i
   | PT.Tuple es ->
     let es' = List.map (exp_to_ast env) es in
     AST.Tuple es'
 
-and exp_to_ast env exp = match exp with
+and exp_to_ast env exp = match exp.PT.exp_desc with
   | PT.Variable id -> AST.Variable (Ident.of_string id)
   | PT.Literal l ->
     let l' = lit_to_ast env l in
     AST.Literal (l')
   | PT.BinaryOperation (op, e1, e2) ->
-    exp_to_ast env (
-      PT.Application (
-        PT.Application (PT.Variable (Primative.binop_to_string op), e1),
-        e2
-      )
-    )
+    exp_to_ast env {
+      PT.exp_desc = PT.Application (
+        {
+          PT.exp_desc = PT.Application (
+            {
+              PT.exp_desc = PT.Variable (Primative.binop_to_string op) ;
+              PT.exp_pos =
+                Position.create
+                  (Position.file exp.PT.exp_pos)
+                  (Position.start exp.PT.exp_pos)
+                  (Position.start e1.PT.exp_pos) ;
+            },
+            e1
+          ) ;
+          PT.exp_pos =
+            Position.create
+              (Position.file exp.PT.exp_pos)
+              (Position.start exp.PT.exp_pos)
+              (Position.finish e1.PT.exp_pos) ;
+        },
+        e2 ;
+      ) ;
+      PT.exp_pos = exp.PT.exp_pos ;
+    }
   | PT.Application (fn, arg) ->
     let fn' = exp_to_ast env fn in
     let arg' = exp_to_ast env arg in
@@ -46,15 +64,18 @@ and exp_to_ast env exp = match exp with
 let rec top_to_ast env exps = match exps with
   | [] -> []
   | hd :: tl ->
-    match hd with
-      | PT.Declaration (lhs, rhs) -> begin match lhs with
+    match hd.PT.top_desc with
+      | PT.Declaration (lhs, rhs) -> begin match lhs.PT.exp_desc with
         | PT.Variable id ->
           let id' = Ident.of_string id in
           let value = exp_to_ast env rhs in
           let tp = AST.to_type env value in
           let env' = Env.add id' tp env in
           AST.Binding (id', tp, value, AST.top_tag) :: top_to_ast env' tl
-        | PT.Application (PT.Variable id, PT.Variable arg) ->
+        | PT.Application (
+          { PT.exp_desc = PT.Variable id; _ },
+          { PT.exp_desc = PT.Variable arg; _ }
+        ) ->
           let id' = Ident.of_string id in
           let arg' = Ident.of_string arg in
           let body = exp_to_ast env rhs in
