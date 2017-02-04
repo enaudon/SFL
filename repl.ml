@@ -54,8 +54,9 @@ let rec repl () =
           (String.concat "\n" (List.map AST.exp_to_string t_ast));
 
     let ids = AST.to_ident_list t_ast in
-    let tps = AST.to_type_list Ident.Map.empty t_ast in
+    let tps = AST.to_type_list Primative.tp_env t_ast in
     let vs = Ast_value_trans.f t_ast in
+
     let rec helper ids tps vs = match ids, tps, vs with
       | id :: id_tl, tp :: tp_tl, v :: v_tl ->
         Printf.printf "%s : %s = %s\n"

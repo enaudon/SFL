@@ -33,6 +33,15 @@ let create_lit lit_desc nterm =
   let lit_pos = pos_of_nterm nterm in
   { PT.lit_desc; PT.lit_pos }
 
+let create_binop (op_str, op_nterm) (lhs, lhs_nterm) (rhs, _) =
+  let op = Primative.binop_to_string op_str in
+  PT.Application (
+    create_exp
+      (PT.Application ( create_exp (PT.Variable op) op_nterm, lhs ))
+      lhs_nterm,
+    rhs
+  )
+
 %}
 
 %token <string> VAR
@@ -79,19 +88,23 @@ top_list:
 exp_desc:
   | lit %prec LITERAL { PT.Literal $1 }
   | VAR               { PT.Variable $1 }
-  | exp PLUS exp      { PT.BinaryOperation (Primative.Addition, $1, $3) }
-  | exp MINUS exp     { PT.BinaryOperation (Primative.Subtraction, $1, $3) }
+  | exp PLUS exp
+    { create_binop (Primative.Addition, 2) ($1, 1) ($3, 3) }
+  | exp MINUS exp
+    { create_binop (Primative.Subtraction, 2) ($1, 1) ($3, 3) }
   | exp ASTERIK exp
-    { PT.BinaryOperation (Primative.Multiplication, $1, $3) }
+    { create_binop (Primative.Multiplication, 2) ($1, 1) ($3, 3) }
   | lit exp %prec ASTERIK
     {
-      PT.BinaryOperation (
-        Primative.Multiplication,
-        create_exp (PT.Literal $1) 1,
-        $2)
+      create_binop
+        (Primative.Multiplication, 2)
+        (create_exp (PT.Literal $1) 1, 1)
+        ($2, 2)
      }
-  | exp FSLASH exp    { PT.BinaryOperation (Primative.Division, $1, $3) }
-  | exp PERCENT exp   { PT.BinaryOperation (Primative.Modulo, $1, $3) }
+  | exp FSLASH exp
+    { create_binop (Primative.Division, 2) ($1, 1) ($3, 3) }
+  | exp PERCENT exp
+    { create_binop (Primative.Modulo, 2) ($1, 1) ($3, 3) }
   | exp exp %prec APP       { PT.Application ($1, $2) }
   | VAR IMP exp %prec ABS   { PT.Abstraction ($1, $3) }
   | LET binding_list IN exp %prec LET   { PT.Binding (List.rev $2, $4) }

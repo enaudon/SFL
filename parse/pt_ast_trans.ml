@@ -33,31 +33,6 @@ and exp_to_ast env exp = match exp.PT.exp_desc with
       AST.exp_desc = AST.Literal l' ;
       AST.exp_pos = exp.PT.exp_pos ;
     }
-  | PT.BinaryOperation (op, e1, e2) ->
-    exp_to_ast env {
-      PT.exp_desc = PT.Application (
-        {
-          PT.exp_desc = PT.Application (
-            {
-              PT.exp_desc = PT.Variable (Primative.binop_to_string op) ;
-              PT.exp_pos =
-                Position.create
-                  (Position.file exp.PT.exp_pos)
-                  (Position.start exp.PT.exp_pos)
-                  (Position.start e1.PT.exp_pos) ;
-            },
-            e1
-          ) ;
-          PT.exp_pos =
-            Position.create
-              (Position.file exp.PT.exp_pos)
-              (Position.start exp.PT.exp_pos)
-              (Position.finish e1.PT.exp_pos) ;
-        },
-        e2 ;
-      ) ;
-      PT.exp_pos = exp.PT.exp_pos ;
-    }
   | PT.Application (fn, arg) ->
     let fn' = exp_to_ast env fn in
     let arg' = exp_to_ast env arg in

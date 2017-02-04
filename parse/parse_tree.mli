@@ -27,7 +27,6 @@ and lit = {
 and exp_desc =
   | Variable of id
   | Literal of lit
-  | BinaryOperation of Primative.binop * exp * exp
   | Application of exp * exp
   | Abstraction of id * exp
   | Binding of (id * exp) list * exp
