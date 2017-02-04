@@ -67,6 +67,6 @@ let eval_top env0 top =
       env, (eval_exp env top) :: vs
   in
   let _, vs = List.fold_left helper (env0, []) top in
-  vs
+  List.rev vs
 
 let f = eval_top val_env

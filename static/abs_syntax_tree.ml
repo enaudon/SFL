@@ -79,7 +79,7 @@ let to_type_list env0 es =
       (env, tp :: tps)
   in
   let _, ts = List.fold_left helper (env0, []) es in
-  ts
+  List.rev ts
 
 let to_ident_list es =
   let helper exp = match exp.exp_desc with
