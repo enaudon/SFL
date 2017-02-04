@@ -16,6 +16,8 @@ let create f (sr, sc) (er, ec) =
     finish = { row = er; col = ec; } ;
   }
 
+let dummy = create "" (-1, -1) (-1, -1)
+
 let file {file; _} = file
 let start {start = {row; col}; _} = row, col
 let finish {finish = {row; col}; _} = row, col

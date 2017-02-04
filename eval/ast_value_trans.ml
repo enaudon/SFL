@@ -22,7 +22,7 @@ let val_env =
       "%", eval_prim ( mod );
     ]
 
-let eval_lit lit = match lit with
+let eval_lit lit = match lit.AST.lit_desc with
   | AST.Integer i -> V.Integer i
   | AST.Boolean b -> V.Boolean b
   | AST.Tuple _ ->
@@ -41,7 +41,7 @@ let rec eval_app env id body arg =
   let env' = Env.add id arg env in
   eval_exp env' body
 
-and eval_exp env exp = match exp with
+and eval_exp env exp = match exp.AST.exp_desc with
   | AST.Literal l -> eval_lit l
   | AST.Variable id -> eval_var env id
   | AST.Application (fn, arg) ->
@@ -58,7 +58,7 @@ and eval_exp env exp = match exp with
     eval_exp env' exp
 
 let eval_top env0 top =
-  let helper (env, vs) top = match top with
+  let helper (env, vs) top = match top.AST.exp_desc with
     | AST.Binding (id, _, value, exp) when exp = AST.top_tag ->
       let value' = eval_exp env value in
       let env' = Env.add id value' env in

@@ -11,19 +11,31 @@
 type id = Ident.t
 (** Identifiers for variables, function arguments, and bindings. *)
 
-type lit =
+type lit_desc =
   | Boolean of bool
   | Integer of int
   | Tuple of exp list
 (** The type of literal values. *)
 
-and exp =
+and lit = {
+  lit_desc : lit_desc ;
+  lit_pos : Position.t ;
+}
+(** Literals, along with meta-data. *)
+
+and exp_desc =
   | Literal of lit
   | Variable of id
   | Application of exp * exp
   | Abstraction of id * Type.t * exp
   | Binding of id * Type.t * exp * exp
 (** Abstract syntax tree expressions.  *)
+
+and exp = {
+  exp_desc : exp_desc ;
+  exp_pos : Position.t ;
+}
+(** Expressions, along with meta-data. *)
 
 val top_tag : exp
 (** A tag for top-level bindings. *)

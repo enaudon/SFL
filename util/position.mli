@@ -15,6 +15,9 @@ type t
  **)
 val create : string -> (int * int) -> (int * int) -> t
 
+(** [dummy] is an invalid, dummy position.  **)
+val dummy : t
+
 (** [file pos] computes the file from a the position [pos]. *)
 val file : t -> string
 

@@ -68,17 +68,20 @@ let rec typo_of_term t = match t with
   | Unify.Disjunction _ ->
     failwith "Disjunction"
 
-let rec ast_map fn ast = match ast with
-  | AST.Abstraction (arg, tp, body) ->
-    let tp' = fn tp in
-    let body' = ast_map fn body in
-    AST.Abstraction (arg, tp', body')
-  | AST.Binding (id, tp, value, exp) ->
-    let tp' = fn tp in
-    let value' = ast_map fn value in
-    let exp' = ast_map fn exp in
-    AST.Binding (id, tp', value', exp')
-  | _ -> ast
+let rec ast_map fn ast =
+  let exp_desc = match ast.AST.exp_desc with
+    | AST.Abstraction (arg, tp, body) ->
+      let tp' = fn tp in
+      let body' = ast_map fn body in
+      AST.Abstraction (arg, tp', body')
+    | AST.Binding (id, tp, value, exp) ->
+      let tp' = fn tp in
+      let value' = ast_map fn value in
+      let exp' = ast_map fn exp in
+      AST.Binding (id, tp', value', exp')
+    | desc -> desc
+  in
+  { ast with AST.exp_desc }
 
 let map_fn s tp =
   let tm = term_of_typo tp in

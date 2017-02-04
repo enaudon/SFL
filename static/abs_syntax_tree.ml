@@ -5,19 +5,30 @@
 
 type id = Ident.t
 
-type lit =
+type lit_desc =
   | Boolean of bool
   | Integer of int
   | Tuple of exp list
+and lit = {
+  lit_desc : lit_desc ;
+  lit_pos : Position.t ;
+}
 
-and exp =
+and exp_desc =
   | Literal of lit
   | Variable of id
   | Application of exp * exp
   | Abstraction of id * Type.t * exp
   | Binding of id * Type.t * exp * exp
+and exp = {
+  exp_desc : exp_desc ;
+  exp_pos : Position.t ;
+}
 
-let top_tag = Variable (Ident.of_string "")
+let top_tag = {
+  exp_desc = Variable (Ident.of_string "") ;
+  exp_pos = Position.dummy ;
+}
 
 module Env = Ident.Map
 
@@ -29,9 +40,9 @@ let tp_of_variable env id =
     )
 
 let tp_of_exp tpchk env e =
-  let rec helper env e = match e with
+  let rec helper env e = match e.exp_desc with
     | Literal l ->
-      begin match l with
+      begin match l.lit_desc with
         | Boolean _ -> Type.Boolean
         | Integer _ -> Type.Integer
         | Tuple es -> Type.Tuple (List.map (helper env) es)
@@ -59,7 +70,7 @@ let to_type = tp_of_exp false
 let typecheck = tp_of_exp true
 
 let to_type_list env0 es =
-  let helper (env, tps) exp = match exp with
+  let helper (env, tps) exp = match exp.exp_desc with
     | Binding (id, tp, _, exp) when exp = top_tag ->
       let env' = Ident.Map.add id tp env in
       (env', tp :: tps)
@@ -71,18 +82,18 @@ let to_type_list env0 es =
   ts
 
 let to_ident_list es =
-  let helper exp = match exp with
+  let helper exp = match exp.exp_desc with
     | Binding (id, _, _, exp) when exp = top_tag -> id
     | _ -> Ident.of_string "_"
   in
   List.map helper es
 
-let rec constrain_exp env exp = match exp with
+let rec constrain_exp env exp = match exp.exp_desc with
   | Variable id ->
     let tp = tp_of_variable env id in
     tp, []
   | Literal l ->
-    begin match l with
+    begin match l.lit_desc with
       | Boolean _ -> Type.Boolean, []
       | Integer _ -> Type.Integer, []
       | Tuple es ->
@@ -94,7 +105,7 @@ let rec constrain_exp env exp = match exp with
   | Application (func, arg) ->
     let func_tp, func_cs = constrain_exp env func in
     let arg_tp, arg_cs = constrain_exp env arg in
-    let ret_tp = match func with
+    let ret_tp = match func.exp_desc with
       | Variable id ->
         Type.Variable
           (Type.TypeVariable.create
@@ -121,7 +132,7 @@ let rec constrain_top
   = fun env exps -> match exps with
     | [] -> []
     | e :: es ->
-      let env', cs = match e with
+      let env', cs = match e.exp_desc with
         | Binding (id, tp, value, exp) when exp = top_tag ->
           let env' = Env.add id tp env in
           let _, cs = constrain_exp env' value in
@@ -134,7 +145,7 @@ let rec constrain_top
 
 let constrain exp = constrain_top Primative.tp_env exp
 
-let rec format_lit ff l = match l with
+let rec format_lit ff l = match l.lit_desc with
   | Boolean b -> Format.fprintf ff "%b" b
   | Integer i -> Format.fprintf ff "%i" i
   | Tuple es ->
@@ -143,16 +154,16 @@ let rec format_lit ff l = match l with
       (Format_util.format_list pp_sep format_exp) es
 
 and format_exp ff exp =
-  let paren ff exp = match exp with
+  let paren ff exp = match exp.exp_desc with
     | Variable _
     | Literal _ -> format_exp ff exp
     | _ -> Format.fprintf ff "(%a)" format_exp exp
   in
-  match exp with
+  match exp.exp_desc with
     | Variable id -> Format.fprintf ff "%s" (Ident.to_string id)
     | Literal l -> format_lit ff l
     | Application _ ->
-      let rec format_app ff exp = match exp with
+      let rec format_app ff exp = match exp.exp_desc with
         | Application (fn, arg) ->
           Format.fprintf ff "%a@ %a" format_app fn paren arg
         | _ -> paren ff exp
@@ -160,9 +171,9 @@ and format_exp ff exp =
       Format.fprintf ff "@[<hv 2>%a@]" format_app exp
     (* TODO: fix odd box opening/closing here--deets in comments *)
     | Abstraction _ ->
-      let rec format_abs ff exp = match exp with
+      let rec format_abs ff exp = match exp.exp_desc with
         | Abstraction (arg, tp, body) ->
-          let formatter = match body with
+          let formatter = match body.exp_desc with
             | Abstraction _ -> Format.fprintf ff "%s : %s ->@ %a"
             | _ -> Format.fprintf ff "%s : %s ->%a"
           in
@@ -176,7 +187,7 @@ and format_exp ff exp =
       (* The second box here (hov 2) is closed in the %a.  See above. *)
       Format.fprintf ff "@[<hv 2>@[<hov 2>%a@]" format_abs exp
     | Binding _ ->
-      let rec format_bind ff exp = match exp with
+      let rec format_bind ff exp = match exp.exp_desc with
         | Binding (id, tp, value, exp) ->
           Format.fprintf ff
             "@[<hv 0>@[<hv 2>let %s : %s =@ %a@]@ in@]@ %a"
