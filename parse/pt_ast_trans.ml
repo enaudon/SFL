@@ -33,7 +33,7 @@ and exp_to_ast env exp = match exp.PT.exp_desc with
       AST.exp_desc = AST.Literal l' ;
       AST.exp_pos = exp.PT.exp_pos ;
     }
-  | PT.Application (fn, arg) ->
+  | PT.Application (fn, arg, _) ->
     let fn' = exp_to_ast env fn in
     let arg' = exp_to_ast env arg in
     {
@@ -78,7 +78,8 @@ let rec top_to_ast env exps = match exps with
           env', desc
         | PT.Application (
           { PT.exp_desc = PT.Variable id; _ },
-          { PT.exp_desc = PT.Variable arg; PT.exp_pos = arg_pos }
+          { PT.exp_desc = PT.Variable arg; PT.exp_pos = arg_pos },
+          _
         ) ->
           let id' = Ident.of_string id in
           let arg' = Ident.of_string arg in

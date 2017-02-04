@@ -12,6 +12,11 @@
 type id = string
 (** Identifiers for variables, function arguments, and bindings. *)
 
+type pos =
+  | Prefix
+  | Postfix
+(** The position of the function, for function application **)
+
 type lit_desc =
   | Boolean of bool
   | Integer of int
@@ -27,7 +32,7 @@ and lit = {
 and exp_desc =
   | Variable of id
   | Literal of lit
-  | Application of exp * exp
+  | Application of exp * exp * pos
   | Abstraction of id * exp
   | Binding of (id * exp) list * exp
 (** Parse tree expressions. *)

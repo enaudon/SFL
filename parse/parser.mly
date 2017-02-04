@@ -33,14 +33,12 @@ let create_lit lit_desc nterm =
   let lit_pos = pos_of_nterm nterm in
   { PT.lit_desc; PT.lit_pos }
 
-let create_binop (op_str, op_nterm) (lhs, lhs_nterm) (rhs, _) =
-  let op = Primative.binop_to_string op_str in
-  PT.Application (
-    create_exp
-      (PT.Application ( create_exp (PT.Variable op) op_nterm, lhs ))
-      lhs_nterm,
-    rhs
-  )
+let create_binop (op, op_nterm) (lhs, lhs_nterm) (rhs, _) =
+  let op' = PT.Variable (Primative.binop_to_string op) in
+  let lhs' =
+    PT.Application (create_exp op' op_nterm, lhs, PT.Postfix)
+  in
+  PT.Application (create_exp lhs' lhs_nterm, rhs, PT.Prefix)
 
 %}
 
@@ -105,7 +103,7 @@ exp_desc:
     { create_binop (Primative.Division, 2) ($1, 1) ($3, 3) }
   | exp PERCENT exp
     { create_binop (Primative.Modulo, 2) ($1, 1) ($3, 3) }
-  | exp exp %prec APP       { PT.Application ($1, $2) }
+  | exp exp %prec APP       { PT.Application ($1, $2, PT.Prefix) }
   | VAR IMP exp %prec ABS   { PT.Abstraction ($1, $3) }
   | LET binding_list IN exp %prec LET   { PT.Binding (List.rev $2, $4) }
 ;

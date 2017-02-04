@@ -4,6 +4,10 @@
 
 type id = string
 
+type pos =
+  | Prefix
+  | Postfix
+
 type lit_desc =
   | Boolean of bool
   | Integer of int
@@ -16,7 +20,7 @@ and lit = {
 and exp_desc =
   | Variable of id
   | Literal of lit
-  | Application of exp * exp
+  | Application of exp * exp * pos
   | Abstraction of id * exp
   | Binding of (id * exp) list * exp
 and exp = {
@@ -52,8 +56,10 @@ and format_exp ff exp =
     | Variable id -> Format.fprintf ff "%s" id
     | Application _ ->
       let rec format_app ff exp = match exp.exp_desc with
-        | Application (fn, arg) ->
+        | Application (fn, arg, Prefix) ->
           Format.fprintf ff "%a@ %a" format_app fn paren arg
+        | Application (fn, arg, Postfix) ->
+          Format.fprintf ff "%a@ %a" format_app arg paren fn
         | _ -> paren ff exp
       in
       Format.fprintf ff "@[<hv 2>%a@]" format_app exp
